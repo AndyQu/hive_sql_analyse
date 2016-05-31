@@ -5,3 +5,5 @@
 /.settings
 /gradle
 /.gradle
+/src/main/java/*.java
+/src/main/java/*.tokens

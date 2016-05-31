@@ -1,14 +1,37 @@
 apply plugin: 'java'
-apply plugin: 'antlr'
+//apply plugin: 'antlr'
+apply plugin: 'me.champeau.gradle.antlr4'
+
+buildscript {
+    repositories {
+        maven {
+            name 'JFrog OSS snapshot repo'
+            url  'https://oss.jfrog.org/oss-snapshot-local/'
+        }
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+    }
+}
 
 repositories {
     jcenter()
     //mavenCentral()
 }
 
+antlr4{
+	source=file("src/main/antlr")
+	output=file("src/main/java")
+	extraArgs=['-Werror']
+}
+
+/*
 tasks.generateGrammarSource{
 	outputDirectory=file("src/main/java/")
 }
+*/
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
