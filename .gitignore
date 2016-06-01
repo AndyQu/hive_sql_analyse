@@ -7,3 +7,7 @@
 /.gradle
 /src/main/java/*.java
 /src/main/java/*.tokens
+/build/
+/test-output/
+/src/main/java/hivesql/analysis/parse/HiveSQL*.java
+/src/main/java/hivesql/analysis/parse/HiveSQL*.tokens

@@ -23,20 +23,16 @@ repositories {
 
 antlr4{
 	source=file("src/main/antlr")
-	output=file("src/main/java")
+	output=file("src/main/java/hivesql/analysis/parse")
 	extraArgs=['-Werror']
 }
 
-/*
-tasks.generateGrammarSource{
-	outputDirectory=file("src/main/java/")
-}
-*/
-
-// In this section you declare the dependencies for your production and test code
 dependencies {
 	compile "org.antlr:antlr4:4.5.3"
     compile 'org.slf4j:slf4j-api:1.7.13'
 
-    testCompile 'junit:junit:4.12'
+    testCompile group: 'org.testng', name: 'testng', version: '6.9.10'
+
 }
+
+compileJava.dependsOn antlr4

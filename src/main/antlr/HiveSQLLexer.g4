@@ -1,5 +1,6 @@
 lexer grammar HiveSQLLexer;
 @ header { 
+	package hivesql.analysis.parse;
  }
 
 SELECT

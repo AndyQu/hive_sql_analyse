@@ -1,5 +1,9 @@
 parser grammar HiveSQLParser;
 
+@header {
+    package hivesql.analysis.parse;
+}
+
 options
    { tokenVocab = HiveSQLLexer; }
 
@@ -68,21 +72,22 @@ where_clause
 
 
 /*
- * inner_logic_expr: 代表 不带括号 的逻辑表达式
- * inner_logic_expr: 代表 带括号   的逻辑表达式
- * logic_expr: 代表 最高层次的逻辑表达式
  */
 
-inner_logic_expr
-   : expr (relational_op expr)+ | expr BETWEEN expr AND expr | expr is_or_is_not NULL
+basic_logic_expr
+   : expr relational_op expr | expr BETWEEN expr AND expr | expr is_or_is_not NULL
    ;
 
-inner_logic_expr_with_paren
-	: inner_logic_expr | LPAREN inner_logic_expr RPAREN
+logic_expr
+	: basic_logic_expr (logic_op basic_logic_expr)+
 	;
 
-logic_expr
-	: inner_logic_expr_with_paren (relational_op inner_logic_expr_with_paren)+
+logic_expr_with_paren
+	: basic_logic_expr | LPAREN basic_logic_expr RPAREN
+	;
+
+top_logic_expr
+	: logic_expr_with_paren (logic_op logic_expr_with_paren)*
 	;
 
 /*
@@ -92,25 +97,40 @@ logic_expr
  * 注意：expr不代表逻辑表达式。
  * 
  */
+non_arith_expr
+	: column_name | DOUBLE | INT | STRING | func_call
+	;
+	
+
+/* 这里注意排序，因为影响parse优先级 */
+arith_binary_op
+	: POWER_OP | DIVIDE | MOD | ASTERISK | PLUS | MINUS
+	;
+	
+/*
+ * 基础算术表达式，这里只写了 双操作符的情况
+ */
+basic_arith_expr
+	: non_arith_expr (arith_binary_op non_arith_expr)+
+	;
+
+basic_arith_expr_with_paren
+	: basic_arith_expr | LPAREN basic_arith_expr RPAREN
+	;
+
+arith_expr
+	: basic_arith_expr_with_paren 	(arith_binary_op basic_arith_expr)*
+	;
+
 inner_expr
-	:  column_name | DOUBLE | INT | STRING | func_call | arithmetic_expr
+	:  non_arith_expr | arith_expr
 	;
 	
 expr
 	: LPAREN inner_expr RPAREN | inner_expr
 	;
    
-/* 这里注意排序，因为影响parse优先级 */
-arithmetic_binary_op
-	: POWER_OP | DIVIDE | MOD | ASTERISK | PLUS | MINUS
-	;
 
-/*
- * 算术表达式，这里只写了 双操作符的情况
- */
-arithmetic_expr
-	: expr arithmetic_binary_op expr
-	;
 
 /*
  * 函数调用
@@ -135,6 +155,10 @@ func_para_list
 relational_op
    : EQ | LTH | GTH | NOT_EQ | LET | GET
    ;
+
+logic_op
+	: AND | OR
+	;
 
 expr_op
    : AND | XOR | OR | NOT
