@@ -182,6 +182,9 @@ ALL_FIELDS
    : '.*'
    ;
 
+DOUBLE_EQ
+	: '=='
+	;
 
 EQ
    : '='
@@ -354,9 +357,13 @@ AS
    : 'as'|'AS'
    ;
 
+DISTINCT
+	: 'distinct'
+	;
+
 
 ID
-   : ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9')+
+   : ('a' .. 'z' | 'A' .. 'Z' | '_') ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9')*
    ;
 
 
@@ -407,5 +414,5 @@ fragment USER_VAR_SUBFIX4
 TODO: should support all characters
 */
 STRING
-   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9')* SINGLE_QUOTE
+   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9' | ' ' | ':' | '-')* SINGLE_QUOTE
    ;

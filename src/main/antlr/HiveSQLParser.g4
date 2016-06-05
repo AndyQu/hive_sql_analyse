@@ -29,10 +29,15 @@ table_alias
    : AS? ID
    ;
 
+//TODO
+/**
+ * 1. 这里暂时把distinct关键字放在这里，实际上是不对的。column_name从概念上讲不应该包括“distinct”这样的修饰符
+ * 2. '*' 也暂时放在这里
+ */
 column_name
    : 
-   ( table_name DOT )?  ID 
-   | ( table_name DOT )? BACK_QUOTE ID BACK_QUOTE
+    (DISTINCT)? ( table_name DOT )?  (ID|ASTERISK)
+   |  (DISTINCT)? ( table_name DOT )? BACK_QUOTE (ID|ASTERISK) BACK_QUOTE
    ;
 
 column_name_alias
@@ -41,7 +46,7 @@ column_name_alias
 
 selected_column
    : 
-   (STRING | INT | DOUBLE | func_call | column_name) (column_name_alias)? 
+   (STRING | INT | DOUBLE | func_call | top_arith_expr) (column_name_alias)? 
    ;
 
 selected_column_list
@@ -82,19 +87,22 @@ group_by_clause
  */
 
 basic_logic_expr
-   : expr relational_op expr | expr BETWEEN expr AND expr | expr is_or_is_not NULL
+   : top_arith_expr relational_op top_arith_expr | top_arith_expr BETWEEN top_arith_expr AND top_arith_expr | top_arith_expr is_or_is_not NULL
    ;
 
 logic_expr
-	: basic_logic_expr (logic_op basic_logic_expr)+
+	: basic_logic_expr (logic_op basic_logic_expr)*
 	;
 
 logic_expr_with_paren
-	: basic_logic_expr | LPAREN basic_logic_expr RPAREN
+	: logic_expr | LPAREN logic_expr RPAREN
 	;
 
 top_logic_expr
-	: logic_expr_with_paren (logic_op logic_expr_with_paren)*
+	: 
+	top_logic_expr (logic_op top_logic_expr)+
+	| LPAREN top_logic_expr (logic_op top_logic_expr)+ RPAREN
+	|logic_expr_with_paren
 	;
 
 /*
@@ -105,7 +113,7 @@ top_logic_expr
  * 
  */
 non_arith_expr
-	: column_name | DOUBLE | INT | STRING | func_call
+	: func_call | column_name | DOUBLE | INT | STRING 
 	;
 	
 
@@ -114,27 +122,25 @@ arith_binary_op
 	: POWER_OP | DIVIDE | MOD | ASTERISK | PLUS | MINUS
 	;
 	
-/*
- * 基础算术表达式，这里只写了 双操作符的情况
- */
+//代表一个 不带括号的 算术表达式
 basic_arith_expr
 	: non_arith_expr (arith_binary_op non_arith_expr)+
 	;
 
+// 代表一个非算术表达式，或者一个 带括号 的算术表达式
 basic_arith_expr_with_paren
-	: basic_arith_expr | LPAREN basic_arith_expr RPAREN
+	: non_arith_expr | LPAREN basic_arith_expr RPAREN
+	;
+// 代表一个 混合了 非算术表达式、带括号的算术表达式 的综合算术表达式
+mixed_arith_expr
+	: basic_arith_expr_with_paren 	(arith_binary_op basic_arith_expr_with_paren)*
 	;
 
-arith_expr
-	: basic_arith_expr_with_paren 	(arith_binary_op basic_arith_expr)*
-	;
-
-inner_expr
-	:  non_arith_expr | arith_expr
-	;
-	
-expr
-	: LPAREN inner_expr RPAREN | inner_expr
+top_arith_expr
+	:
+	top_arith_expr (arith_binary_op top_arith_expr)+
+	| LPAREN top_arith_expr (arith_binary_op top_arith_expr)+ RPAREN
+	| LPAREN mixed_arith_expr RPAREN | mixed_arith_expr
 	;
    
 
@@ -143,7 +149,7 @@ expr
  * 函数调用
  */
 func_call
-   : func_name LPAREN func_para_list RPAREN
+   : func_name LPAREN func_para_list? RPAREN
    ;
 
 func_name
@@ -151,16 +157,16 @@ func_name
    ;
 
 func_para
-   : expr
+   : top_logic_expr|top_arith_expr
    ;
 
 func_para_list
-   : expr ? (COMMA expr)* 
+   : func_para (COMMA func_para)* 
    ;
    
 
 relational_op
-   : EQ | LTH | GTH | NOT_EQ | LET | GET
+   : DOUBLE_EQ | EQ | LTH | GTH | NOT_EQ | LET | GET
    ;
 
 logic_op

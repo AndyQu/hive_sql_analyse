@@ -40,13 +40,13 @@ compileJava.dependsOn antlr4
 
 /**
 How to run:
-	gradle grun -PsqlFileName=b_test.sql
+	gradle grunGui -PsqlFileName=b_test.sql
 */
 if(project.properties.containsKey('sqlFileName')){
 	task grunGui(dependsOn:compileJava, type: JavaExec) {
 		classpath = sourceSets.main.runtimeClasspath
 		main='org.antlr.v4.gui.TestRig'
-		args 'hivesql.analysis.parse.HiveSQL', 'stat', '-gui', "${project.projectDir}/src/test/resources/${sqlFileName}"
+		args 'hivesql.analysis.parse.HiveSQL', 'stat', '-gui', '-trace', '-diagnostics', '-tokens', "${project.projectDir}/src/test/resources/${sqlFileName}"
 	}
 }
 
