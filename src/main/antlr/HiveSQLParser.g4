@@ -11,13 +11,14 @@ stat
    : select_clause+
    ;
 
-schema_name
-   : ID
-   ;
+
 
 select_clause
-   //: SELECT column_list_clause ( FROM table_references )? ( where_clause )?
-   : SELECT selected_column_list ( FROM table_references )? ( where_clause )?
+   : SELECT selected_column_list ( FROM table_references )? ( where_clause )? (group_by_clause)? SEMI_COLON?
+   ;
+
+schema_name
+   : ID
    ;
 
 table_name
@@ -29,15 +30,18 @@ table_alias
    ;
 
 column_name
-   : ( ( schema_name DOT )? ID DOT )? ID ( column_name_alias )? | ( table_alias DOT )? ID | USER_VAR ( column_name_alias )?
+   : 
+   ( table_name DOT )?  ID 
+   | ( table_name DOT )? BACK_QUOTE ID BACK_QUOTE
    ;
 
 column_name_alias
-   : ID
+   : AS? ID
    ;
 
 selected_column
-   : func_call ((AS)? column_name_alias)? | column_name
+   : 
+   (STRING | INT | DOUBLE | func_call | column_name) (column_name_alias)? 
    ;
 
 selected_column_list
@@ -49,7 +53,7 @@ index_name
    ;
 
 column_list
-   : LPAREN column_name ( COMMA column_name )* RPAREN
+   : column_name ( COMMA column_name )*
    ;
 /**
 column_list_clause
@@ -67,9 +71,12 @@ select_key
    ;
 
 where_clause
-   : WHERE logic_expr
+   : WHERE top_logic_expr
    ;
 
+group_by_clause
+	: GROUP BY column_list
+	;
 
 /*
  */
@@ -190,7 +197,7 @@ join_clause
 
 join_condition
    :  ON top_logic_expr  
-   |  USING column_list 
+   |  USING LPAREN column_list RPAREN
    ;
 
 index_hint_list

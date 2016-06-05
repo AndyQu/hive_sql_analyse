@@ -218,7 +218,7 @@ GET
    ;
 
 
-SEMI
+SEMI_COLON
    : ';'
    ;
 
@@ -232,6 +232,14 @@ DOT
    : '.'
    ;
 
+SINGLE_QUOTE
+	:'\''
+	;
+	
+BACK_QUOTE
+	:'`'
+	;
+	
 
 COLLATE
    : 'collate'
@@ -348,7 +356,7 @@ AS
 
 
 ID
-   : ( 'a' .. 'z' | 'A' .. 'Z' | '_' )+
+   : ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9')+
    ;
 
 
@@ -399,5 +407,5 @@ fragment USER_VAR_SUBFIX4
 TODO: should support all characters
 */
 STRING
-   : '\'' ('A' .. 'Z' | 'a' .. 'z' | '_' )* '\''
+   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9')* SINGLE_QUOTE
    ;
