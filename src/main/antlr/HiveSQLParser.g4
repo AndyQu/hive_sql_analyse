@@ -94,32 +94,21 @@ logic_expr
 	: basic_logic_expr (logic_op basic_logic_expr)*
 	;
 
-logic_expr_with_paren
-	: logic_expr | LPAREN logic_expr RPAREN
-	;
-
 top_logic_expr
 	: 
 	top_logic_expr (logic_op top_logic_expr)+
 	| LPAREN top_logic_expr (logic_op top_logic_expr)+ RPAREN
-	|logic_expr_with_paren
+	|logic_expr
 	;
 
-/*
- * inner_expr: 代表不带括号的 表达式（包括算术表达式、函数调用、table column名称、整型数值、字符串数值）
- * expr：代表 带括号的 表达式
- * 
- * 注意：expr不代表逻辑表达式。
- * 
- */
-non_arith_expr
-	: func_call | column_name | DOUBLE | INT | STRING 
-	;
-	
 
 /* 这里注意排序，因为影响parse优先级 */
 arith_binary_op
 	: POWER_OP | DIVIDE | MOD | ASTERISK | PLUS | MINUS
+	;
+	
+non_arith_expr
+	: func_call | column_name | DOUBLE | INT | STRING 
 	;
 	
 //代表一个 不带括号的 算术表达式
@@ -128,12 +117,8 @@ basic_arith_expr
 	;
 
 // 代表一个非算术表达式，或者一个 带括号 的算术表达式
-basic_arith_expr_with_paren
-	: non_arith_expr | LPAREN basic_arith_expr RPAREN
-	;
-// 代表一个 混合了 非算术表达式、带括号的算术表达式 的综合算术表达式
 mixed_arith_expr
-	: basic_arith_expr_with_paren 	(arith_binary_op basic_arith_expr_with_paren)*
+	: non_arith_expr | LPAREN basic_arith_expr RPAREN
 	;
 
 top_arith_expr
