@@ -326,11 +326,15 @@ LEFT
 RIGHT
    : 'right'
    ;
+   
+FULL
+	: 'full'
+	;
 
 
-OJ
-   : 'oj'
-   ;
+//OJ
+//   : 'oj'
+//   ;
 
 
 ON

@@ -25,7 +25,7 @@ table_name
    ;
 
 table_alias
-   : ID
+   : AS? ID
    ;
 
 column_name
@@ -171,39 +171,26 @@ is_or_is_not
 
 
 table_references
-   : table_reference ( ( COMMA table_reference ) | join_clause )*
-   ;
-
-table_reference
-   : table_factor1 | table_atom
-   ;
-
-table_factor1
-   : table_factor2 ( ( INNER | CROSS )? JOIN table_atom ( join_condition )? )?
-   ;
-
-table_factor2
-   : table_factor3 ( STRAIGHT_JOIN table_atom ( ON logic_expr )? )?
-   ;
-
-table_factor3
-   : table_factor4 ( ( LEFT | RIGHT ) ( OUTER )? JOIN table_factor4 join_condition )?
-   ;
-
-table_factor4
-   : table_atom ( NATURAL ( ( LEFT | RIGHT ) ( OUTER )? )? JOIN table_atom )?
+   : table_atom ( ( COMMA table_atom ) | join_clause )*
    ;
 
 table_atom
-   : ( table_name ( partition_clause )? ( table_alias )? ( index_hint_list )? ) | ( subquery subquery_alias ) | ( LPAREN table_references RPAREN ) | ( OJ table_reference LEFT OUTER JOIN table_reference ON logic_expr )
+   : ( table_name ( partition_clause )? ( table_alias )? ( index_hint_list )? ) 
+   | ( subquery subquery_alias ) 
+   | ( LPAREN table_references RPAREN ) 
+//   | ( OJ table_reference LEFT OUTER JOIN table_reference ON logic_expr )
+//oj: http://dev.mysql.com/doc/refman/5.7/en/join.html
    ;
 
 join_clause
-   : ( ( INNER | CROSS )? JOIN table_atom ( join_condition )? ) | ( STRAIGHT_JOIN table_atom ( ON logic_expr )? ) | ( ( LEFT | RIGHT ) ( OUTER )? JOIN table_factor4 join_condition ) | ( NATURAL ( ( LEFT | RIGHT ) ( OUTER )? )? JOIN table_atom )
+   : 
+	( ( LEFT | RIGHT | FULL) ( OUTER )? )? JOIN table_atom ( join_condition )?
+	| CROSS JOIN table_atom (join_condition)?
    ;
 
 join_condition
-   : ( ON logic_expr ( expr_op logic_expr )* ) | ( USING column_list )
+   :  ON top_logic_expr  
+   |  USING column_list 
    ;
 
 index_hint_list
@@ -215,7 +202,8 @@ index_options
    ;
 
 index_hint
-   : USE index_options LPAREN ( index_list )? RPAREN | IGNORE index_options LPAREN index_list RPAREN
+   : USE index_options LPAREN ( index_list )? RPAREN 
+   | IGNORE index_options LPAREN index_list RPAREN
    ;
 
 index_list
@@ -235,7 +223,7 @@ partition_name
    ;
 
 subquery_alias
-   : ID
+   : AS? ID
    ;
 
 subquery
