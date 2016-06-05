@@ -36,3 +36,10 @@ dependencies {
 }
 
 compileJava.dependsOn antlr4
+
+task grun(dependsOn:compileJava, type: JavaExec) {
+	println "path:"+project.projectDir
+	classpath = sourceSets.main.runtimeClasspath
+	main='org.antlr.v4.gui.TestRig'
+	args 'hivesql.analysis.parse.HiveSQL', 'stat', '-gui', "${project.projectDir}/src/test/resources/a_test.sql"
+}
