@@ -90,15 +90,11 @@ basic_logic_expr
    : top_arith_expr relational_op top_arith_expr | top_arith_expr BETWEEN top_arith_expr AND top_arith_expr | top_arith_expr is_or_is_not NULL
    ;
 
-logic_expr
-	: basic_logic_expr (logic_op basic_logic_expr)*
-	;
-
 top_logic_expr
 	: 
 	top_logic_expr (logic_op top_logic_expr)+
 	| LPAREN top_logic_expr (logic_op top_logic_expr)+ RPAREN
-	|logic_expr
+	| basic_logic_expr
 	;
 
 
@@ -111,21 +107,11 @@ non_arith_expr
 	: func_call | column_name | DOUBLE | INT | STRING 
 	;
 	
-//代表一个 不带括号的 算术表达式
-basic_arith_expr
-	: non_arith_expr (arith_binary_op non_arith_expr)+
-	;
-
-// 代表一个非算术表达式，或者一个 带括号 的算术表达式
-mixed_arith_expr
-	: non_arith_expr | LPAREN basic_arith_expr RPAREN
-	;
-
 top_arith_expr
 	:
 	top_arith_expr (arith_binary_op top_arith_expr)+
 	| LPAREN top_arith_expr (arith_binary_op top_arith_expr)+ RPAREN
-	| LPAREN mixed_arith_expr RPAREN | mixed_arith_expr
+	| non_arith_expr
 	;
    
 
