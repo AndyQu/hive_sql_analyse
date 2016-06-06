@@ -11,3 +11,4 @@
 /test-output/
 /src/main/java/hivesql/analysis/parse/HiveSQL*.java
 /src/main/java/hivesql/analysis/parse/HiveSQL*.tokens
+/src/test/resources/auto_*.sql
