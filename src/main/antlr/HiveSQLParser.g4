@@ -46,7 +46,7 @@ column_name_alias
 
 selected_column
    : 
-   (STRING | INT | DOUBLE | func_call | top_arith_expr) (column_name_alias)? 
+   (STRING | INT | DOUBLE | (func_call over_clause?) | top_arith_expr) (column_name_alias)? 
    ;
 
 selected_column_list
@@ -87,7 +87,10 @@ group_by_clause
  */
 
 basic_logic_expr
-   : top_arith_expr relational_op top_arith_expr | top_arith_expr BETWEEN top_arith_expr AND top_arith_expr | top_arith_expr is_or_is_not NULL
+   : top_arith_expr relational_op top_arith_expr 
+   | top_arith_expr BETWEEN top_arith_expr AND top_arith_expr 
+   | top_arith_expr is_or_is_not NULL 
+   | case_clause
    ;
 
 top_logic_expr
@@ -112,6 +115,11 @@ top_arith_expr
 	top_arith_expr (arith_binary_op top_arith_expr)+
 	| LPAREN top_arith_expr (arith_binary_op top_arith_expr)+ RPAREN
 	| non_arith_expr
+	| case_clause
+	;
+
+top_expr
+	: top_arith_expr|top_logic_expr
 	;
    
 
@@ -128,7 +136,7 @@ func_name
    ;
 
 func_para
-   : top_logic_expr|top_arith_expr
+   : top_expr
    ;
 
 func_para_list
@@ -214,4 +222,16 @@ subquery
    : LPAREN select_clause RPAREN
    ;
 
-
+//TODO
+/**
+ * windows字句暂不支持
+ */
+over_clause
+	: OVER LPAREN PARTITION BY ID (COMMA ID)* (ORDER BY ID (COMMA ID)* (DESC|ASC)?)? RPAREN
+	;
+/**
+ * case_clause既可以作算术表达式，又可以做逻辑表达式放到where里面
+ */
+case_clause
+	: CASE (WHEN top_logic_expr THEN top_expr)+ ELSE top_expr END
+	;

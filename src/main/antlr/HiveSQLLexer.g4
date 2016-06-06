@@ -351,7 +351,20 @@ FULL
 ON
    : 'on'
    ;
+/**
+ * 优先级：OVER必须放在ID前面。否则 'over'会被优先识别为ID，而不是OVER。
+ */
+OVER
+	: 'over'
+	;
 
+DESC
+	: 'desc'
+	;
+
+ASC
+	: 'asc'
+	;
 
 AS
    : 'as'|'AS'
@@ -361,7 +374,25 @@ DISTINCT
 	: 'distinct'
 	;
 
+CASE
+	: 'case'
+	;
+WHEN
+	: 'when'
+	;
+THEN
+	: 'then'
+	;
+ELSE
+	: 'else'
+	;
+END
+	: 'end'
+	;
 
+/**
+ * ID 必须放在所有关键字后面，否则，关键字会被优先识别为ID
+ */
 ID
    : ('a' .. 'z' | 'A' .. 'Z' | '_') ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9')*
    ;
