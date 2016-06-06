@@ -8,7 +8,7 @@ options
    { tokenVocab = HiveSQLLexer; }
 
 stat
-   : select_clause+
+   : select_clause (UNION (ALL|DISTINCT)? select_clause)*
    ;
 
 
@@ -169,7 +169,7 @@ table_references
 table_atom
    : ( table_name ( partition_clause )? ( table_alias )? ( index_hint_list )? ) 
    | ( subquery subquery_alias ) 
-   | ( LPAREN table_references RPAREN ) 
+//   | ( LPAREN table_references RPAREN ) 
 //   | ( OJ table_reference LEFT OUTER JOIN table_reference ON logic_expr )
 //oj: http://dev.mysql.com/doc/refman/5.7/en/join.html
    ;

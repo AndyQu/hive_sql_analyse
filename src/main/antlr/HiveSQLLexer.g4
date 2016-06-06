@@ -3,6 +3,7 @@ lexer grammar HiveSQLLexer;
 	package hivesql.analysis.parse;
  }
 
+
 SELECT
    : 'select'
    ;
@@ -177,10 +178,6 @@ COLON
    : ':'
    ;
 
-
-ALL_FIELDS
-   : '.*'
-   ;
 
 DOUBLE_EQ
 	: '=='
@@ -390,6 +387,10 @@ END
 	: 'end'
 	;
 
+UNION
+	: 'union'
+	;
+
 /**
  * ID 必须放在所有关键字后面，否则，关键字会被优先识别为ID
  */
@@ -441,9 +442,10 @@ fragment USER_VAR_SUBFIX4
    : ( 'A' .. 'Z' | 'a' .. 'z' | '_' | '$' | '0' .. '9' | DOT )+
    ;
 
+//TODO
 /*
-TODO: should support all characters
+should support all characters
 */
 STRING
-   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9' | ' ' | ':' | '-')* SINGLE_QUOTE
+   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9' | ' ' | ':' | '-' | '.' | '$' | '(' | ')')* SINGLE_QUOTE
    ;
