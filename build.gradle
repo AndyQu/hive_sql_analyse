@@ -52,19 +52,58 @@ if(project.properties.containsKey('sqlFileName')){
 
 task grunAllTestSqls(){}
 
+def generateSqlFilePrefix="auto_"
+
 file("${project.projectDir}/src/test/resources/").eachFileMatch{
-		fileName-> fileName.endsWith(".sql")
+		fileName-> fileName.endsWith(".sql") && fileName.startsWith(generateSqlFilePrefix)
 	} {
 		File file->
 			def taskName="task_test_${file.name}"
 			task (taskName, dependsOn:compileJava, type: JavaExec) {
 				classpath = sourceSets.main.runtimeClasspath
 				main='org.antlr.v4.gui.TestRig'
-				args 'hivesql.analysis.parse.HiveSQL', 'stat', '-diagnostics', "${file.absolutePath}"
+				args 'hivesql.analysis.parse.HiveSQL', 'stat', "${file.absolutePath}"
 			}
 			grunAllTestSqls.dependsOn taskName
 	}
 
 
+
+/**
+* 
+*/
+
+def convertFileToLowerCase(String inputFile, String outputFile){
+	def content = new File(inputFile).text.toCharArray()
+	def targetFile = new File(outputFile)
+	if(targetFile.exists()){
+		targetFile.delete()
+	}
+	for(int i=0;i<content.length;i++){
+		char c=content[i]
+		if(c>='A' && c<='Z'){
+			//'a'-'A'+c :结果类型是String。很奇怪
+			def d= (char)( ((int)'a')-((int)'A') + (int)c )
+			//println "convert ${c} to ${d}"
+			targetFile << d
+		}else{
+			targetFile << c
+		}
+	}
+	println "file conversion: inputFile=${inputFile} outputFile=${outputFile}"
+}
+
+task testFileConvert()<<{
+	convertFileToLowerCase("${project.projectDir}/src/test/resources/i_test.sql", "${project.projectDir}/src/test/resources/auto_i_test.sql")
+}
+
+task convertFiles()<<{
+	file("${project.projectDir}/src/test/resources/").eachFileMatch{
+		fileName-> fileName.endsWith(".sql") && !fileName.startsWith(generateSqlFilePrefix)
+	} {
+		File file->
+			convertFileToLowerCase(file.getAbsolutePath(), file.getParentFile().getAbsolutePath()+"/${generateSqlFilePrefix}"+file.getName())
+	}
+}
 
 
