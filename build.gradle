@@ -29,10 +29,18 @@ antlr4{
 
 dependencies {
 	compile "org.antlr:antlr4:4.5.3"
+	
+    compile 'ch.qos.logback:logback-classic:1.1.3'
+    compile 'ch.qos.logback:logback-core:1.1.3'
     compile 'org.slf4j:slf4j-api:1.7.13'
 
     testCompile group: 'org.testng', name: 'testng', version: '6.9.10'
 
+}
+configurations {
+    //重要。实际使用中，如果没有下面两行配置，则roll-over时，active log会发生改变。
+    compile.exclude module: 'log4j'
+    compile.exclude module: 'slf4j-log4j12'
 }
 
 compileJava.dependsOn antlr4
