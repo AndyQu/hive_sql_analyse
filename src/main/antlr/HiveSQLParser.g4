@@ -14,7 +14,7 @@ stat
 
 
 select_clause
-   : SELECT selected_column_list ( FROM table_references )? ( where_clause )? (group_by_clause)? SEMI_COLON?
+   : SELECT selected_column_list ( FROM table_references )? ( where_clause )? (group_by_clause)? cluster_clause? distribute_clause? sort_clause? SEMI_COLON?
    ;
 
 schema_name
@@ -57,7 +57,7 @@ index_name
    : ID
    ;
 
-column_list
+column_name_list
    : column_name ( COMMA column_name )*
    ;
 /**
@@ -80,7 +80,7 @@ where_clause
    ;
 
 group_by_clause
-	: GROUP BY column_list
+	: GROUP BY column_name_list
 	;
 
 /*
@@ -182,7 +182,7 @@ join_clause
 
 join_condition
    :  ON top_logic_expr  
-   |  USING LPAREN column_list RPAREN
+   |  USING LPAREN column_name_list RPAREN
    ;
 
 index_hint_list
@@ -219,7 +219,7 @@ subquery_alias
    ;
 
 subquery
-   : LPAREN select_clause RPAREN
+   : LPAREN stat RPAREN
    ;
 
 //TODO
@@ -227,11 +227,27 @@ subquery
  * windows字句暂不支持
  */
 over_clause
-	: OVER LPAREN PARTITION BY ID (COMMA ID)* (ORDER BY ID (COMMA ID)* (DESC|ASC)?)? RPAREN
+	: OVER LPAREN PARTITION BY column_name_list (order_clause)? RPAREN
 	;
 /**
  * case_clause既可以作算术表达式，又可以做逻辑表达式放到where里面
  */
 case_clause
 	: CASE (WHEN top_logic_expr THEN top_expr)+ ELSE top_expr END
+	;
+
+order_clause
+	: ORDER BY column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
+	;
+
+cluster_clause
+	: CLUSTER BY column_name_list
+	;
+
+distribute_clause
+	: DISTRIBUTE BY column_name_list
+	;
+
+sort_clause
+	: SORT BY column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
 	;

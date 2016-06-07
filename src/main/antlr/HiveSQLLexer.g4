@@ -391,6 +391,18 @@ UNION
 	: 'union'
 	;
 
+CLUSTER
+	: 'cluster'
+	;
+
+DISTRIBUTE
+	: 'distribute'
+	;
+
+SORT
+	: 'sort'
+	;
+
 /**
  * ID 必须放在所有关键字后面，否则，关键字会被优先识别为ID
  */
