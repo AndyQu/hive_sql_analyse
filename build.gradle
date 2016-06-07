@@ -50,7 +50,7 @@ if(project.properties.containsKey('sqlFileName')){
 	}
 }
 
-task grunAllTestSqls(){}
+task testAllSqls(){}
 
 def generateSqlFilePrefix="auto_"
 
@@ -62,9 +62,9 @@ file("${project.projectDir}/src/test/resources/").eachFileMatch{
 			task (taskName, dependsOn:compileJava, type: JavaExec) {
 				classpath = sourceSets.main.runtimeClasspath
 				main='org.antlr.v4.gui.TestRig'
-				args 'hivesql.analysis.parse.HiveSQL', 'stat', "${file.absolutePath}"
+				args 'hivesql.analysis.parse.HiveSQL', 'stat', '-diagnostics', "${file.absolutePath}"
 			}
-			grunAllTestSqls.dependsOn taskName
+			testAllSqls.dependsOn taskName
 	}
 
 
@@ -74,10 +74,12 @@ file("${project.projectDir}/src/test/resources/").eachFileMatch{
 */
 
 def convertFileToLowerCase(String inputFile, String outputFile){
+	println "file conversion:"
 	def content = new File(inputFile).text.toCharArray()
 	def targetFile = new File(outputFile)
 	if(targetFile.exists()){
 		targetFile.delete()
+		println "\tremove:${outputFile}"
 	}
 	for(int i=0;i<content.length;i++){
 		char c=content[i]
@@ -90,7 +92,9 @@ def convertFileToLowerCase(String inputFile, String outputFile){
 			targetFile << c
 		}
 	}
-	println "file conversion: inputFile=${inputFile} outputFile=${outputFile}"
+	println "\tinputFile=${inputFile}"
+	println "\toutputFile=${outputFile}"
+	println ""
 }
 
 task testFileConvert()<<{
