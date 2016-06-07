@@ -223,9 +223,9 @@ subquery
    ;
 
 //TODO
-/**
- * windows字句暂不支持
- */
+//windows字句暂不支持
+//TODO
+//row_number() over 支持 distribute by，但是在Hive语法手册中找不到官方正式定义
 over_clause
 	: OVER LPAREN PARTITION BY column_name_list (order_clause)? RPAREN
 	;
