@@ -1,6 +1,7 @@
 apply plugin: 'java'
 //apply plugin: 'antlr'
 apply plugin: 'me.champeau.gradle.antlr4'
+apply plugin: "eclipse"
 
 buildscript {
     repositories {
