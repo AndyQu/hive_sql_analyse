@@ -42,17 +42,17 @@ public class ATNStateExt {
 	
 	public static Set<Transition> getNextNonEpsilonTransitions(Set<ATNState>visitedStates, Transition t, Logger logger){
 		Set<Transition> s = new HashSet<Transition>();
-		logger.info("event_name=check_state state_number={}", t.target.stateNumber);
+		logger.debug("event_name=check_state state_number={}", t.target.stateNumber);
 		if(t.isEpsilon()==false){
 			if(!visitedStates.contains(t.target)){
 				visitedStates.add(t.target);
-				logger.info("event_name=add_state state_number={}", t.target.stateNumber);
+				logger.debug("event_name=add_state state_number={}", t.target.stateNumber);
 				s.add(t);
 			}else{
-				logger.info("event_name=already_visited_state state_number={}", t.target.stateNumber);
+				logger.debug("event_name=already_visited_state state_number={}", t.target.stateNumber);
 			}
 		}else{
-			logger.info("event_name=check_sub_states");
+			logger.debug("event_name=check_sub_states");
 			Arrays.asList(t.target.getTransitions()).stream().forEach(
 					t1->{
 						s.addAll(getNextNonEpsilonTransitions(visitedStates, t1, logger));
