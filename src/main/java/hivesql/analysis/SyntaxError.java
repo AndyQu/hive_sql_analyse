@@ -13,9 +13,9 @@ import org.antlr.v4.runtime.atn.Transition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import extension.ATNStateExt;
-import extension.IntervalExt;
-import extension.RuleContextExt;
+import antlr4.extension.ATNStateExt;
+import antlr4.extension.IntervalExt;
+import antlr4.extension.RuleContextExt;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
 

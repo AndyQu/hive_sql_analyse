@@ -41,5 +41,6 @@
 <!-- 	</logger> -->
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
+		<appender-ref ref="infoAppender" />
 	</root>
 </configuration>

@@ -1,4 +1,4 @@
-package extension;
+package antlr4.extension;
 
 import java.util.Arrays;
 import java.util.HashSet;
