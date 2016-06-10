@@ -11,6 +11,11 @@ public class SelectIDNode extends RuleContext {
 		this.orderNumInSameLevel = orderNumInSameLevel;
 	}
 
+	@Override
+	public String getText() {
+		return " {SelectIDNode: level_num=" + leveNum + " order_num_in_same_level=" + orderNumInSameLevel + "} ";
+	}
+
 	public int getLeveNum() {
 		return leveNum;
 	}
@@ -25,5 +30,10 @@ public class SelectIDNode extends RuleContext {
 
 	public void setOrderNumInSameLevel(int orderNumInSameLevel) {
 		this.orderNumInSameLevel = orderNumInSameLevel;
+	}
+	
+	@Override
+	public String toString(){
+		return getText();
 	}
 }

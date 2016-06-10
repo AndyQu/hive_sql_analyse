@@ -15,10 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import com.google.gson.Gson;
+
 public class ParserTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParserTest.class);
 	@Test
 	public void testSqlA() {
+		Gson gson = new Gson();
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
 					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
@@ -37,6 +40,9 @@ public class ParserTest {
 						key.getKey(1),
 						HiveSQLParser.ruleNames[value.getRuleIndex()],
 						value.getStop());
+			   
+//			   LOGGER.info("{}\n",value.getText());
+			   LOGGER.info("{}\n",gson.toJson(value));
 			 }
 			
 		} catch (IOException e) {
