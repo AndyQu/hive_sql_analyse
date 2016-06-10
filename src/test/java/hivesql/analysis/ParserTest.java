@@ -4,6 +4,7 @@ import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -14,6 +15,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.atn.ATNState;
+import org.antlr.v4.runtime.atn.Transition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -51,20 +53,21 @@ public class ParserTest {
 					ATNState curState = atn.states.get(e.getOffendingState());
 					LOGGER.info("atn_state={} offending_state={}",curState.stateNumber, e.getOffendingState());
 					
-					ATNStateExt.showTransitions(curState, LOGGER, 20, true);
-//					LOGGER.info("event_name=alternatives alt={}", ruleCtx.getAltNumber());
-					
 					Stream<String> expectedTokens = IntervalExt.toTokens(e.getExpectedTokens(), HiveSQLLexer.tokenNames);
-//					Stream<String> currentRuleValidTokens = IntervalExt.toTokens(atn.nextTokens(curState, ruleCtx), HiveSQLLexer.tokenNames);
-//					Stream<String> parentRuleValidTokens = IntervalExt.toTokens(atn.nextTokens(curState, ruleCtx.getParent()), HiveSQLLexer.tokenNames);
-//					LOGGER.info("event_name=current_rule_valid_tokens tokens={}", currentRuleValidTokens.reduce((a,b)->a+" , "+b));
-//					LOGGER.info("event_name=parent_rule_valid_tokens tokens={}", parentRuleValidTokens.reduce((a,b)->a+" , "+b));
-					LOGGER.error("event_name=syntax_error line={} char_position={} msg={} token={} expectedTokens={} rule_names={}",
+					LOGGER.error("event_name=syntax_error line={} char_position={} msg={} token={} expectedTokens={}",
 							line, 
 							charPositionInLine, 
 							msg, 
 							e.getOffendingToken().getText(),
 							expectedTokens.reduce((String a, String b) -> a + " , " + b)
+					);
+					
+					Set<Transition> nonEpsilonTransitions = ATNStateExt.getNonEpsilonTransitions(curState, LOGGER);
+					nonEpsilonTransitions.stream().forEach(
+							t->IntervalExt.toTokens(t.label(), HiveSQLLexer.tokenNames).forEach(
+									token->
+										LOGGER.info("event_name=expected_token value={} target_rule={}",token, HiveSQLParser.ruleNames[t.target.ruleIndex])
+							)
 					);
 				}
 			});

@@ -1,7 +1,11 @@
 package extension;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.antlr.v4.runtime.atn.ATNState;
+import org.antlr.v4.runtime.atn.Transition;
 import org.slf4j.Logger;
 
 import hivesql.analysis.parse.HiveSQLLexer;
@@ -25,6 +29,37 @@ public class ATNStateExt {
 					showTransitions(transition.target, logger, level-1, filterEpsilon);
 				}
 		);
+	}
+	
+	public static Set<Transition> getNonEpsilonTransitions(ATNState curState, Logger logger){
+		Set<ATNState> visitedStates=new HashSet<ATNState>();
+		Set<Transition> s = new HashSet<Transition>();
+		Arrays.asList(curState.getTransitions()).forEach(
+				t->s.addAll(getNextNonEpsilonTransitions(visitedStates, t, logger))
+		);
+		return s;
+	}
+	
+	public static Set<Transition> getNextNonEpsilonTransitions(Set<ATNState>visitedStates, Transition t, Logger logger){
+		Set<Transition> s = new HashSet<Transition>();
+		logger.info("event_name=check_state state_number={}", t.target.stateNumber);
+		if(t.isEpsilon()==false){
+			if(!visitedStates.contains(t.target)){
+				visitedStates.add(t.target);
+				logger.info("event_name=add_state state_number={}", t.target.stateNumber);
+				s.add(t);
+			}else{
+				logger.info("event_name=already_visited_state state_number={}", t.target.stateNumber);
+			}
+		}else{
+			logger.info("event_name=check_sub_states");
+			Arrays.asList(t.target.getTransitions()).stream().forEach(
+					t1->{
+						s.addAll(getNextNonEpsilonTransitions(visitedStates, t1, logger));
+					}
+			);
+		}
+		return s;
 	}
 	
 }
