@@ -47,39 +47,44 @@ public class ParserTest {
 			}
 			
 		}).create();
+		
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
 					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
 			ParserRuleContext topCtx = parser.stat();
-			MultiKeyMap mm = SelectClauseSegregator.segregate(topCtx);
+			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 			
-			MapIterator it = mm.mapIterator();
-			 while (it.hasNext()) {
-			   MultiKey key = (MultiKey)it.next();
-			   ParserRuleContext value = (ParserRuleContext)it.getValue();
-			   
-			   LOGGER.info("event_name=show_select_clause level_number={} order_num_in_same_level={} rule_name={} last_token={}",
-						key.getKey(0),
-						key.getKey(1),
-						HiveSQLParser.ruleNames[value.getRuleIndex()],
-						value.getStop());
-			   
-//			   LOGGER.info("{}\n",value.getText());
-			   LOGGER.info("{}\n",value.toStringTree(Arrays.asList(HiveSQLParser.ruleNames)));
-			   /*
-			   try{
-				   LOGGER.info("{}\n",gson.toJson(value));
-			   }catch(Exception e){
-				   LOGGER.error(e.getClass().getName());
-				   System.exit(1);
-			   }
-			   */
-			 }
+			show(mm);
 			
 		} catch (IOException e) {
 
 		}
+	}
+	
+	private void show(MultiKeyMap<Integer, RuleContext> mm){
+		MapIterator<MultiKey<? extends Integer>,RuleContext> it = mm.mapIterator();
+		 while (it.hasNext()) {
+		   MultiKey<? extends Integer> key = it.next();
+		   ParserRuleContext value = (ParserRuleContext)it.getValue();
+		   
+		   LOGGER.info("event_name=show_select_clause level_number={} order_num_in_same_level={} rule_name={} last_token={}",
+					key.getKey(0),
+					key.getKey(1),
+					HiveSQLParser.ruleNames[value.getRuleIndex()],
+					value.getStop());
+		   
+//		   LOGGER.info("{}\n",value.getText());
+		   LOGGER.info("{}\n",value.toStringTree(Arrays.asList(HiveSQLParser.ruleNames)));
+		   /*
+		   try{
+			   LOGGER.info("{}\n",gson.toJson(value));
+		   }catch(Exception e){
+			   LOGGER.error(e.getClass().getName());
+			   System.exit(1);
+		   }
+		   */
+		 }
 	}
 }
