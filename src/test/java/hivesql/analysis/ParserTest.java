@@ -1,5 +1,6 @@
 package hivesql.analysis;
 
+import hivesql.analysis.node.MyAstNode;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
 
@@ -17,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 //import com.google.gson.ExclusionStrategy;
 //import com.google.gson.FieldAttributes;
 //import com.google.gson.Gson;
@@ -24,6 +28,8 @@ import org.testng.annotations.Test;
 
 public class ParserTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParserTest.class);
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	
 	@Test
 	public void testSqlA() {
 //		Gson gson =  new GsonBuilder().setExclusionStrategies(new ExclusionStrategy(){
@@ -42,7 +48,6 @@ public class ParserTest {
 //
 //			@Override
 //			public boolean shouldSkipClass(Class<?> clazz) {
-//				// TODO Auto-generated method stub
 //				return false;
 //			}
 //			
@@ -64,12 +69,26 @@ public class ParserTest {
 			show(mm);
 			
 			
-			ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames);
+			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames);
 			
-
+			MultiKeyMap<Integer, MyAstNode> compressedAstM = SingleBranchCompressor.compress(astM);
+			
+			showCompressedNodes(compressedAstM);
 			
 		} catch (IOException e) {
 
+		}
+	}
+	
+	private void showCompressedNodes(MultiKeyMap<Integer, MyAstNode> compressedAstM){
+		MapIterator<MultiKey<? extends Integer>, MyAstNode> it = compressedAstM.mapIterator();
+		while (it.hasNext()) {
+			MultiKey<? extends Integer> key = it.next();
+			MyAstNode value =  it.getValue();
+			LOGGER.debug("event_name=show_compressed_ast_node level_number={} order_num_in_same_level={} value=\n{}",
+					key.getKey(0),
+					key.getKey(1),
+					gson.toJson(value));
 		}
 	}
 	
