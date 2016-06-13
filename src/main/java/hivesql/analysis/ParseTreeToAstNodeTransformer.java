@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,8 @@ public class ParseTreeToAstNodeTransformer {
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 
-	public static MultiKeyMap<Integer, AstNode> transform(MultiKeyMap<Integer, RuleContext> mm, String[] ruleNames) {
-		MultiKeyMap<Integer, AstNode> resultM = new MultiKeyMap<Integer, AstNode>();
+	public static MultiKeyMap<Integer, MyAstNode> transform(MultiKeyMap<Integer, RuleContext> mm, String[] ruleNames) {
+		MultiKeyMap<Integer, MyAstNode> resultM = MultiKeyMap.multiKeyMap(new LinkedMap<>());
 
 		MapIterator<MultiKey<? extends Integer>, RuleContext> it = mm.mapIterator();
 		while (it.hasNext()) {
@@ -42,11 +43,11 @@ public class ParseTreeToAstNodeTransformer {
 		return resultM;
 	}
 	
-	public static AstNode transform(ParseTree ctx, String[] ruleNames) {
+	public static MyAstNode transform(ParseTree ctx, String[] ruleNames) {
 		return subTransform(ctx, null, ruleNames);
 	}
 
-	private static AstNode subTransform(ParseTree ctx, AstNode parent, String[] ruleNames) {
+	private static MyAstNode subTransform(ParseTree ctx, AstNode parent, String[] ruleNames) {
 		MyAstNode resultNode = new MyAstNode();
 		resultNode.setParent(parent);
 		resultNode.setSourceInterval(new Interval(ctx.getSourceInterval().a, ctx.getSourceInterval().b));
@@ -75,7 +76,7 @@ public class ParseTreeToAstNodeTransformer {
 			}
 			resultNode.setChildren(childs);
 		} 
-		LOGGER.info("event_name=transform_node_done node_json=\n{}", gson.toJson(resultNode));
+		LOGGER.debug("event_name=transform_node_done node_json=\n{}", gson.toJson(resultNode));
 		return resultNode;
 	}
 }
