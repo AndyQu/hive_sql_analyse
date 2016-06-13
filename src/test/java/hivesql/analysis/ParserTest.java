@@ -4,7 +4,7 @@ import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
 
 import java.io.IOException;
-import java.util.Arrays;
+//import java.util.Arrays;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -17,36 +17,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+//import com.google.gson.ExclusionStrategy;
+//import com.google.gson.FieldAttributes;
+//import com.google.gson.Gson;
+//import com.google.gson.GsonBuilder;
 
 public class ParserTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParserTest.class);
 	@Test
 	public void testSqlA() {
-		Gson gson =  new GsonBuilder().setExclusionStrategies(new ExclusionStrategy(){
-
-			@Override
-			public boolean shouldSkipField(FieldAttributes f) {
-				if(f.getName().equals("parent")){
-					LOGGER.info("skip parent");
-					return f.getName().equals("parent");
-				}else{
-					LOGGER.info("do not skip {} {}.{}", f.getDeclaredClass().getName(), f.getDeclaringClass().getName(), f.getName());
-					return false;
-				}
-						//&& (f.getDeclaredClass()==RuleContext.class||f.getDeclaredClass()==ParserRuleContext.class);
-			}
-
-			@Override
-			public boolean shouldSkipClass(Class<?> clazz) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-			
-		}).create();
+//		Gson gson =  new GsonBuilder().setExclusionStrategies(new ExclusionStrategy(){
+//
+//			@Override
+//			public boolean shouldSkipField(FieldAttributes f) {
+//				if(f.getName().equals("parent")){
+//					LOGGER.info("skip parent");
+//					return f.getName().equals("parent");
+//				}else{
+//					LOGGER.info("do not skip {} {}.{}", f.getDeclaredClass().getName(), f.getDeclaringClass().getName(), f.getName());
+//					return false;
+//				}
+//						//&& (f.getDeclaredClass()==RuleContext.class||f.getDeclaredClass()==ParserRuleContext.class);
+//			}
+//
+//			@Override
+//			public boolean shouldSkipClass(Class<?> clazz) {
+//				// TODO Auto-generated method stub
+//				return false;
+//			}
+//			
+//		}).create();
 		
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
@@ -54,9 +54,19 @@ public class ParserTest {
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
 			ParserRuleContext topCtx = parser.stat();
-			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 			
+			
+			for(int i=0;i<parser.getTokenStream().size();i++){
+				LOGGER.debug("event_name=show_token index={} value={}", i, parser.getTokenStream().get(i));
+			}
+			
+			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 			show(mm);
+			
+			
+			ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames);
+			
+
 			
 		} catch (IOException e) {
 
@@ -76,7 +86,7 @@ public class ParserTest {
 					value.getStop());
 		   
 //		   LOGGER.info("{}\n",value.getText());
-		   LOGGER.info("{}\n",value.toStringTree(Arrays.asList(HiveSQLParser.ruleNames)));
+//		   LOGGER.info("{}\n",value.toStringTree(Arrays.asList(HiveSQLParser.ruleNames)));
 		   /*
 		   try{
 			   LOGGER.info("{}\n",gson.toJson(value));
