@@ -1,7 +1,5 @@
 package hivesql.analysis;
 
-import java.util.UUID;
-
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.apache.commons.collections4.map.LinkedMap;
@@ -16,7 +14,6 @@ public class SelectClauseSegregator {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SelectClauseSegregator.class);
 
 	
-	private static UUID uuid;
 
 	/**
 	 * 将Parse树中的select/stat语句剥离开，每一个层次的select语句都有一个层号number、同一层次内的排序number。
@@ -28,7 +25,6 @@ public class SelectClauseSegregator {
 	 */
 	
 	public static MultiKeyMap<Integer, RuleContext> segregate(ParserRuleContext topContext) {
-		uuid = UUID.randomUUID();
 		return subSegregate(topContext, 1, 1, 0);
 	}
 
@@ -59,11 +55,4 @@ public class SelectClauseSegregator {
 		return m;
 	}
 
-	public static UUID getUuid() {
-		return uuid;
-	}
-
-	public static void setUuid(UUID uuid) {
-		SelectClauseSegregator.uuid = uuid;
-	}
 }
