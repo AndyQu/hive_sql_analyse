@@ -19,4 +19,9 @@ public class MyAstNode extends AstNode {
 	public void setNodeType(AstNodeType nodeType) {
 		this.nodeType = nodeType;
 	}
+	
+	@Override
+	public String toString(){
+		return String.format("{node_type:%s, name:%s, source_interval:%s}", getNodeType(), getName(), getSourceInterval());
+	}
 }
