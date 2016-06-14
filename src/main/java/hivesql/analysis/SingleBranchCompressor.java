@@ -32,9 +32,11 @@ public class SingleBranchCompressor {
 				node.getChildren().set(i, cChild);
 				cChild.setParent(node);
 			}
+			node.setTopSingleBranchName(node.getName());
 			return node;
 		}else{
 			MyAstNode child = compress((MyAstNode)node.getChildren().get(0));
+			child.setTopSingleBranchName(node.getName());
 			LOGGER.debug("event_name=compress_single_branch removed_node={} replacing_node={}", node, child);
 			
 			return child;

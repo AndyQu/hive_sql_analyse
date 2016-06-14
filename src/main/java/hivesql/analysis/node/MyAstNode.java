@@ -7,6 +7,7 @@ import common.ast.AstNode;
 public class MyAstNode extends AstNode {
 	private AstNodeType nodeType;
 	private transient Token token;
+	private String topSingleBranchName;
 	
 	public MyAstNode(){
 	}
@@ -29,6 +30,14 @@ public class MyAstNode extends AstNode {
 
 	public void setToken(Token token) {
 		this.token = token;
+	}
+
+	public String getTopSingleBranchName() {
+		return topSingleBranchName;
+	}
+
+	public void setTopSingleBranchName(String topSingleBranchName) {
+		this.topSingleBranchName = topSingleBranchName;
 	}
 
 	@Override
