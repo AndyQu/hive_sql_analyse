@@ -65,20 +65,25 @@ public class ParserTest {
 			}
 			
 			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
-			showSegregatedClauses(mm);
+//			showSegregatedClauses(mm);
 			
 			
-			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames);
+			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames, parser.getInputStream());
 			
 			MultiKeyMap<Integer, MyAstNode> compressedAstM = SingleBranchCompressor.compress(astM);
 			
-			showCompressedNodes(compressedAstM);
+//			showCompressedNodes(compressedAstM);
 			
 			MultiKeyMap<Integer, String> formatedM = Formatter.format(compressedAstM);
 			
+//			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+//					4,
+//					0,
+//					formatedM.get(4, 0));
+			
 			formatedM.entrySet().stream().forEach(entry->{
 				MultiKey<? extends Integer> k = entry.getKey();
-				LOGGER.debug("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+				LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
 						k.getKey(0),
 						k.getKey(1),
 						entry.getValue());
