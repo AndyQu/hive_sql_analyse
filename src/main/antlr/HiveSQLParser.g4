@@ -14,7 +14,7 @@ stat
 
 
 select_clause
-   : SELECT selected_column_list ( FROM table_references )? ( where_clause )? (group_by_clause)? cluster_clause? distribute_clause? sort_clause? SEMI_COLON?
+   : SELECT selected_column_list ( FROM table_references )? ( WHERE where_clause )? (GROUP BY group_by_clause)? (CLUSTER BY cluster_clause)? (DISTRIBUTE BY distribute_clause)? (SORT BY sort_clause)? SEMI_COLON?
    ;
 
 schema_name
@@ -76,11 +76,11 @@ select_key
    ;
 
 where_clause
-   : WHERE top_logic_expr
+   :  top_logic_expr
    ;
 
 group_by_clause
-	: GROUP BY column_name_list
+	:  column_name_list
 	;
 
 /*
@@ -241,13 +241,13 @@ order_clause
 	;
 
 cluster_clause
-	: CLUSTER BY column_name_list
+	:  column_name_list
 	;
 
 distribute_clause
-	: DISTRIBUTE BY column_name_list
+	:  column_name_list
 	;
 
 sort_clause
-	: SORT BY column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
+	:  column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
 	;
