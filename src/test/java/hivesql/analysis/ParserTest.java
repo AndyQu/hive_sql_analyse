@@ -76,18 +76,18 @@ public class ParserTest {
 			
 			MultiKeyMap<Integer, String> formatedM = Formatter.format(compressedAstM);
 			
-//			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
-//					4,
-//					0,
-//					formatedM.get(4, 0));
+			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+					2,
+					0,
+					formatedM.get(2, 0));
 			
-			formatedM.entrySet().stream().forEach(entry->{
-				MultiKey<? extends Integer> k = entry.getKey();
-				LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
-						k.getKey(0),
-						k.getKey(1),
-						entry.getValue());
-			});
+//			formatedM.entrySet().stream().forEach(entry->{
+//				MultiKey<? extends Integer> k = entry.getKey();
+//				LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+//						k.getKey(0),
+//						k.getKey(1),
+//						entry.getValue());
+//			});
 			
 		} catch (IOException e) {
 
