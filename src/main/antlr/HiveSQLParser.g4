@@ -14,7 +14,7 @@ stat
 
 
 select_clause
-   : SELECT selected_column_list ( FROM table_references )? ( WHERE where_clause )? (GROUP BY group_by_clause)? (CLUSTER BY cluster_clause)? (DISTRIBUTE BY distribute_clause)? (SORT BY sort_clause)? SEMI_COLON?
+   : SELECT selected_column_list ( FROM table_references )? ( WHERE top_logic_expr )? (GROUP BY group_by_clause)? (CLUSTER BY cluster_clause)? (DISTRIBUTE BY distribute_clause)? (SORT BY sort_clause)? SEMI_COLON?
    ;
 
 schema_name
@@ -73,10 +73,6 @@ from_clause
 
 select_key
    : SELECT
-   ;
-
-where_clause
-   :  top_logic_expr
    ;
 
 group_by_clause
