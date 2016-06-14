@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.RuleContextWithAltNum;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -34,12 +33,12 @@ public class ParseTreeToAstNodeTransformer {
 	public static MultiKeyMap<Integer, MyAstNode> transform(MultiKeyMap<Integer, RuleContext> mm, String[] ruleNames) {
 		MultiKeyMap<Integer, MyAstNode> resultM = MultiKeyMap.multiKeyMap(new LinkedMap<>());
 
-		MapIterator<MultiKey<? extends Integer>, RuleContext> it = mm.mapIterator();
-		while (it.hasNext()) {
-			MultiKey<? extends Integer> key = it.next();
-			ParserRuleContext value = (ParserRuleContext) it.getValue();
+		mm.entrySet().stream().forEach(entry->{
+			MultiKey<? extends Integer> key = entry.getKey();
+			ParserRuleContext value = (ParserRuleContext) entry.getValue();
 			resultM.put(key.getKey(0), key.getKey(1), transform(value, ruleNames));
-		}
+		});
+		
 		return resultM;
 	}
 	
@@ -53,8 +52,10 @@ public class ParseTreeToAstNodeTransformer {
 		resultNode.setSourceInterval(new Interval(ctx.getSourceInterval().a, ctx.getSourceInterval().b));
 		if (ctx instanceof ErrorNodeImpl) {
 			resultNode.setNodeType(AstNodeType.Error);
+			resultNode.setToken(((ErrorNodeImpl)ctx).symbol);
 		} else if (ctx instanceof TerminalNodeImpl) {
 			resultNode.setNodeType(AstNodeType.Terminal);
+			resultNode.setToken(((TerminalNodeImpl)ctx).symbol);
 		} else if(ctx instanceof SelectIDNode){
 			SelectIDNode snode=(SelectIDNode)ctx;
 			resultNode = new ReferenceNode();

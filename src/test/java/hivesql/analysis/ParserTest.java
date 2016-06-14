@@ -11,7 +11,6 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.slf4j.Logger;
@@ -66,7 +65,7 @@ public class ParserTest {
 			}
 			
 			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
-			show(mm);
+			showSegregatedClauses(mm);
 			
 			
 			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames);
@@ -75,45 +74,42 @@ public class ParserTest {
 			
 			showCompressedNodes(compressedAstM);
 			
+			MultiKeyMap<Integer, String> formatedM = Formatter.format(compressedAstM);
+			
+			formatedM.entrySet().stream().forEach(entry->{
+				MultiKey<? extends Integer> k = entry.getKey();
+				LOGGER.debug("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+						k.getKey(0),
+						k.getKey(1),
+						entry.getValue());
+			});
+			
 		} catch (IOException e) {
 
 		}
 	}
 	
 	private void showCompressedNodes(MultiKeyMap<Integer, MyAstNode> compressedAstM){
-		MapIterator<MultiKey<? extends Integer>, MyAstNode> it = compressedAstM.mapIterator();
-		while (it.hasNext()) {
-			MultiKey<? extends Integer> key = it.next();
-			MyAstNode value =  it.getValue();
+		compressedAstM.entrySet().stream().forEach(entry->{
+			MultiKey<? extends Integer> key = entry.getKey();
+			MyAstNode value =  entry.getValue();
 			LOGGER.debug("event_name=show_compressed_ast_node level_number={} order_num_in_same_level={} value=\n{}",
 					key.getKey(0),
 					key.getKey(1),
 					gson.toJson(value));
-		}
+		});
 	}
 	
-	private void show(MultiKeyMap<Integer, RuleContext> mm){
-		MapIterator<MultiKey<? extends Integer>,RuleContext> it = mm.mapIterator();
-		 while (it.hasNext()) {
-		   MultiKey<? extends Integer> key = it.next();
-		   ParserRuleContext value = (ParserRuleContext)it.getValue();
-		   
-		   LOGGER.info("event_name=show_select_clause level_number={} order_num_in_same_level={} rule_name={} last_token={}",
-					key.getKey(0),
-					key.getKey(1),
-					HiveSQLParser.ruleNames[value.getRuleIndex()],
-					value.getStop());
-		   
-//		   LOGGER.info("{}\n",value.getText());
-//		   LOGGER.info("{}\n",value.toStringTree(Arrays.asList(HiveSQLParser.ruleNames)));
-		   /*
-		   try{
-			   LOGGER.info("{}\n",gson.toJson(value));
-		   }catch(Exception e){
-			   LOGGER.error(e.getClass().getName());
-			   System.exit(1);
-		   }
-		   */
-		 }
+	private void showSegregatedClauses(MultiKeyMap<Integer, RuleContext> mm) {
+		mm.entrySet().stream().forEach(entry -> {
+			MultiKey<? extends Integer> key = entry.getKey();
+			RuleContext value = entry.getValue();
+
+			LOGGER.info(
+					"event_name=show_select_clause level_number={} order_num_in_same_level={} rule_name={} last_token={}",
+					key.getKey(0), key.getKey(1), HiveSQLParser.ruleNames[value.getRuleIndex()],
+					((ParserRuleContext) value).getStop());
+
+		});
 	}
 }

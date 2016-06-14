@@ -1,6 +1,5 @@
 package hivesql.analysis;
 
-import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -15,12 +14,12 @@ public class SingleBranchCompressor {
 	public static MultiKeyMap<Integer, MyAstNode> compress(MultiKeyMap<Integer, MyAstNode> astM){
 		MultiKeyMap<Integer, MyAstNode> resultM = MultiKeyMap.multiKeyMap(new LinkedMap<>());
 
-		MapIterator<MultiKey<? extends Integer>, MyAstNode> it = astM.mapIterator();
-		while (it.hasNext()) {
-			MultiKey<? extends Integer> key = it.next();
-			MyAstNode value =  it.getValue();
+		astM.entrySet().stream().forEach(entry->{
+			MultiKey<? extends Integer> key = entry.getKey();
+			MyAstNode value =  entry.getValue();
 			resultM.put(key.getKey(0), key.getKey(1), compress(value));
-		}
+		});
+		
 		return resultM;
 	}
 	
