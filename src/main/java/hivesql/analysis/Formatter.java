@@ -1,11 +1,14 @@
 package hivesql.analysis;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +149,7 @@ public class Formatter {
 							step=1;
 						}
 					}else{
-						result.append(subFormat(spaceCount+2, child));
+						result.append(String.format("%s\n", subFormat(spaceCount+2, child)));
 					}
 				}
 			}
@@ -242,14 +245,41 @@ public class Formatter {
 				result.append(buildSpaces(spaceCount));
 				for (int i = 0; i < node.getChildren().size(); i++) {
 					MyAstNode child=(MyAstNode) node.getChildren().get(i);
-					if(child.getNodeType()==AstNodeType.Terminal && (
-							child.getToken().getText().equals("(") || child.getToken().getText().equals(")")
-							)){
-						result.append(String.format("%s", child.getToken().getText()));
-					}else{
+					if(child.getNodeType()==AstNodeType.Terminal){
+						if(child.getToken().getText().equals("(")){
+							result.append("(\n");
+						}else if(child.getToken().getText().equals(")")){
+							result.append(String.format("\n%s)", buildSpaces(spaceCount)));
+						}
+					} else{
 						result.append(subFormat(spaceCount+2, (MyAstNode) node.getChildren().get(i)));
 					}
 				}
+			}
+		});
+		
+		subFormatterM.put("top_logic_expr",  new SubFormatter(){
+			
+			@Override
+			protected  void processChilds(int spaceCount, MyAstNode node, StringBuilder result){
+				result.append(buildSpaces(spaceCount));
+				List<String> lst = new ArrayList<String>();
+				for (int i = 0; i < node.getChildren().size(); i++) {
+					MyAstNode child=(MyAstNode) node.getChildren().get(i);
+					if(child.getNodeType()==AstNodeType.Terminal){
+						if(child.getToken().getText().equals("(")){
+							result.append("(\n");
+							result.append(buildSpaces(spaceCount+Indent_Space_Count));
+						}else if(child.getToken().getText().equals(")")){
+							result.append(String.format("\n%s)", buildSpaces(spaceCount)));
+						}else {
+							lst.add(child.getToken().getText());
+						}
+					}else{
+						lst.add(subFormat(0, child));
+					}
+				}
+				result.append(StringUtils.join(lst, buildSpaces(Indent_Space_Count)));
 			}
 		});
 		
@@ -260,6 +290,7 @@ public class Formatter {
 				for (int i = 0; i < node.getChildren().size(); i++) {
 					result.append(subFormat(spaceCount, (MyAstNode) node.getChildren().get(i)));
 				}
+				result.append("\n");
 			}
 		});
 		
