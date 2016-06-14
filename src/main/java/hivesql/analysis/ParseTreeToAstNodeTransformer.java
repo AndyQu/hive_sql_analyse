@@ -3,10 +3,12 @@ package hivesql.analysis;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.InterpreterRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.RuleContextWithAltNum;
+import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
@@ -30,32 +32,36 @@ public class ParseTreeToAstNodeTransformer {
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 
-	public static MultiKeyMap<Integer, MyAstNode> transform(MultiKeyMap<Integer, RuleContext> mm, String[] ruleNames) {
+	public static MultiKeyMap<Integer, MyAstNode> transform(MultiKeyMap<Integer, RuleContext> mm, String[] ruleNames,TokenStream tokenStream) {
 		MultiKeyMap<Integer, MyAstNode> resultM = MultiKeyMap.multiKeyMap(new LinkedMap<>());
 
 		mm.entrySet().stream().forEach(entry->{
 			MultiKey<? extends Integer> key = entry.getKey();
 			ParserRuleContext value = (ParserRuleContext) entry.getValue();
-			resultM.put(key.getKey(0), key.getKey(1), transform(value, ruleNames));
+			resultM.put(key.getKey(0), key.getKey(1), transform(value, ruleNames, tokenStream));
 		});
 		
 		return resultM;
 	}
 	
-	public static MyAstNode transform(ParseTree ctx, String[] ruleNames) {
-		return subTransform(ctx, null, ruleNames);
+	public static MyAstNode transform(ParseTree ctx, String[] ruleNames, TokenStream tokenStream) {
+		return subTransform(ctx, null, ruleNames, tokenStream);
 	}
 
-	private static MyAstNode subTransform(ParseTree ctx, AstNode parent, String[] ruleNames) {
+	private static MyAstNode subTransform(ParseTree ctx, AstNode parent, String[] ruleNames, TokenStream tokenStream) {
 		MyAstNode resultNode = new MyAstNode();
 		resultNode.setParent(parent);
 		resultNode.setSourceInterval(new Interval(ctx.getSourceInterval().a, ctx.getSourceInterval().b));
 		if (ctx instanceof ErrorNodeImpl) {
 			resultNode.setNodeType(AstNodeType.Error);
-			resultNode.setToken(((ErrorNodeImpl)ctx).symbol);
+			CommonToken t = (CommonToken)((ErrorNodeImpl)ctx).getPayload();
+			t.setText(tokenStream.getText(ctx.getSourceInterval()));
+			resultNode.setToken(t);
 		} else if (ctx instanceof TerminalNodeImpl) {
 			resultNode.setNodeType(AstNodeType.Terminal);
-			resultNode.setToken(((TerminalNodeImpl)ctx).symbol);
+			CommonToken t = (CommonToken)((TerminalNodeImpl)ctx).getPayload();
+			t.setText(tokenStream.getText(ctx.getSourceInterval()));
+			resultNode.setToken(t);
 		} else if(ctx instanceof SelectIDNode){
 			SelectIDNode snode=(SelectIDNode)ctx;
 			resultNode = new ReferenceNode();
@@ -73,7 +79,7 @@ public class ParseTreeToAstNodeTransformer {
 			List<AstNode> childs = new ArrayList<AstNode>();
 			for(int i=0;i<pctx.getChildCount();i++){
 				ParseTree child=pctx.getChild(i);
-				childs.add(subTransform(child, resultNode, ruleNames));
+				childs.add(subTransform(child, resultNode, ruleNames, tokenStream));
 			}
 			resultNode.setChildren(childs);
 		} 
