@@ -1,6 +1,6 @@
 package hivesql.analysis.format;
 
-public class LeafBlockWIthoutLine extends Block {
+public class LeafBlockWithoutLine extends Block {
 	private String content;
 
 	public String getContent() {
@@ -18,8 +18,8 @@ public class LeafBlockWIthoutLine extends Block {
 			this.content=this.content+c;
 	}
 	
-	public static LeafBlockWIthoutLine build(int spaceCount, String line){
-		LeafBlockWIthoutLine b = new LeafBlockWIthoutLine();
+	public static LeafBlockWithoutLine build(int spaceCount, String line){
+		LeafBlockWithoutLine b = new LeafBlockWithoutLine();
 		b.setSpaceCount(spaceCount);
 		b.setContent(line);
 		return b;
