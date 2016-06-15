@@ -2,13 +2,19 @@ parser grammar HiveSQLParser;
 
 @header {
     package hivesql.analysis.parse;
+    import hivesql.analysis.format.*;
 }
 
 options
    { tokenVocab = HiveSQLLexer; }
+@members {
+	public String getTokenText(Token t) {
+		return getTokenStream().getText(new Interval(t.getTokenIndex(), t.getTokenIndex()));
+	}
+}
 
 stat
-   : select_clause (UNION (ALL|DISTINCT)? select_clause)*
+   : select_clause (UNION (ALL|DISTINCT)? select_clause)* 
    ;
 
 
@@ -17,12 +23,24 @@ select_clause
    : SELECT selected_column_list ( FROM table_references )? ( WHERE top_logic_expr )? (GROUP BY group_by_clause)? (CLUSTER BY cluster_clause)? (DISTRIBUTE BY distribute_clause)? (SORT BY sort_clause)? SEMI_COLON?
    ;
 
-schema_name
-   : ID
+schema_name returns [LeafBlockWIthoutLine block]
+   : ID 
+   {
+   	$block = LeafBlockWIthoutLine.build(1, getTokenText($ID));
+   }
    ;
 
-table_name
-   : (schema_name DOT)? ID
+table_name returns [NonLeafBlock block]
+   : 
+   (schema_name DOT)? ID
+   {
+   		$block = new NonLeafBlock();
+   		try{
+   			$block.addChild($schema_name.block);
+   			$block.addChild(LeafBlockWIthoutLine.build(0, getTokenText($DOT)));
+   		}catch(Exception e){}
+   		$block.addChild(LeafBlockWIthoutLine.build(0, getTokenText($ID)));
+   }
    ;
 
 table_alias
@@ -34,14 +52,42 @@ table_alias
  * 1. 这里暂时把distinct关键字放在这里，实际上是不对的。column_name从概念上讲不应该包括“distinct”这样的修饰符
  * 2. '*' 也暂时放在这里
  */
-column_name
+full_column_name returns [NonLeafBlock block]
    : 
-    (DISTINCT)? ( table_name DOT )?  (ID|ASTERISK)
-   |  (DISTINCT)? ( table_name DOT )? BACK_QUOTE (ID|ASTERISK) BACK_QUOTE
+    (DISTINCT)? ( table_name DOT )?  simple_column_name
+    {
+    	$block = new NonLeafBlock();
+    	try{
+    		$block.addChild(LeafBlockWIthoutLine.build(1, getTokenText($DISTINCT)));
+    	}catch(Exception e){}
+   		try{
+   			$block.addChild($table_name.block);
+   			$block.addChild(LeafBlockWIthoutLine.build(0, getTokenText($DOT)));
+   		}catch(Exception e){}
+   		$block.addChild($simple_column_name.block);
+    }
    ;
 
-column_name_alias
+simple_column_name returns [LeafBlockWIthoutLine block]
+	:ID 
+		{	$block=LeafBlockWIthoutLine.build(0, getTokenText($ID));	}
+	|ASTERISK 
+		{	$block=LeafBlockWIthoutLine.build(0, getTokenText($ASTERISK));}
+	| BACK_QUOTE ID BACK_QUOTE
+		{	$block=LeafBlockWIthoutLine.build(0, String.format("%s%s%s", getTokenText($BACK_QUOTE), getTokenText($ID), getTokenText($BACK_QUOTE)) );}
+	| BACK_QUOTE ASTERISK BACK_QUOTE
+		{	$block=LeafBlockWIthoutLine.build(0, String.format("%s%s%s", getTokenText($BACK_QUOTE), getTokenText($ASTERISK)), getTokenText($BACK_QUOTE) );}
+	;
+
+column_name_alias returns [LeafBlockWIthoutLine block]
    : AS? ID
+   {
+   		$block = LeafBlockWIthoutLine.build(0, " ");
+   		try{
+   			$block.addContent(getTokenText($AS)+" ");
+   		}catch(Exception e)
+   		$block.addContent(getTokenText($ID))
+   }
    ;
 
 selected_column
@@ -58,7 +104,7 @@ index_name
    ;
 
 column_name_list
-   : column_name ( COMMA column_name )*
+   : full_column_name ( COMMA full_column_name )*
    ;
 /**
 column_list_clause
@@ -103,7 +149,7 @@ arith_binary_op
 	;
 	
 non_arith_expr
-	: func_call | column_name | DOUBLE | INT | STRING 
+	: func_call | full_column_name | DOUBLE | INT | STRING 
 	;
 	
 top_arith_expr
@@ -206,8 +252,14 @@ partition_names
    : partition_name ( COMMA partition_name )*
    ;
 
-partition_name
-   : ID
+partition_name returns [Block block]
+   : ID 
+   { 
+   	TerminalNodeImpl n = (TerminalNodeImpl)_localctx.getChild(0);
+   	String text = getTokenStream().getText(n.getSourceInterval());
+   	System.out.println("construct:"+text);
+   	$block = LeafBlockWIthoutLine.build(1, text);
+   }
    ;
 
 subquery_alias
@@ -233,7 +285,7 @@ case_clause
 	;
 
 order_clause
-	: ORDER BY column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
+	: ORDER BY full_column_name (DESC|ASC)? ((COMMA full_column_name (DESC|ASC)?))*
 	;
 
 cluster_clause
@@ -245,5 +297,5 @@ distribute_clause
 	;
 
 sort_clause
-	:  column_name (DESC|ASC)? ((COMMA column_name (DESC|ASC)?))*
+	:  full_column_name (DESC|ASC)? ((COMMA full_column_name (DESC|ASC)?))*
 	;
