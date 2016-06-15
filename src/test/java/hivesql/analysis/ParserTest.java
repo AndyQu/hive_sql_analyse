@@ -1,5 +1,6 @@
 package hivesql.analysis;
 
+import hivesql.analysis.format.Block;
 import hivesql.analysis.node.MyAstNode;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
@@ -54,7 +55,8 @@ public class ParserTest {
 		
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
-					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
+//					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
+					getResourceAsStream("/auto_e_test.sql")));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
 			ParserRuleContext topCtx = parser.stat();
@@ -64,22 +66,21 @@ public class ParserTest {
 				LOGGER.debug("event_name=show_token index={} value={}", i, parser.getTokenStream().get(i));
 			}
 			
-			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
+//			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 //			showSegregatedClauses(mm);
 			
 			
-			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames, parser.getInputStream());
+//			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames, parser.getInputStream());
+//			
+//
+//			
+//			MultiKeyMap<Integer, Block> formatedM = StructureFormatter.format(astM);
+//			
+//			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
+//					2,
+//					0,
+//					formatedM.get(2, 0).show());
 			
-			MultiKeyMap<Integer, MyAstNode> compressedAstM = SingleBranchCompressor.compress(astM);
-			
-//			showCompressedNodes(compressedAstM);
-			
-			MultiKeyMap<Integer, String> formatedM = Formatter.format(compressedAstM);
-			
-			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
-					2,
-					0,
-					formatedM.get(2, 0));
 			
 //			formatedM.entrySet().stream().forEach(entry->{
 //				MultiKey<? extends Integer> k = entry.getKey();
@@ -88,6 +89,9 @@ public class ParserTest {
 //						k.getKey(1),
 //						entry.getValue());
 //			});
+			
+//			MultiKeyMap<Integer, MyAstNode> compressedAstM = SingleBranchCompressor.compress(astM);
+//			showCompressedNodes(compressedAstM);
 			
 		} catch (IOException e) {
 
