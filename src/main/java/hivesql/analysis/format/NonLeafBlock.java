@@ -1,6 +1,7 @@
 package hivesql.analysis.format;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NonLeafBlock extends Block {
@@ -31,6 +32,6 @@ public class NonLeafBlock extends Block {
 	public String show() {
 		StringBuilder ret = new StringBuilder();
 		childs.stream().forEach(child -> ret.append(child.show()));
-		return ret.toString();
+		return addSpaces(getSpaceCount(), ret.toString());
 	}
 }
