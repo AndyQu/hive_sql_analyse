@@ -1,6 +1,10 @@
 package hivesql.analysis.format;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class Block {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(Block.class);
 	private int spaceCount;
 
 	public int getSpaceCount() {
