@@ -1,9 +1,5 @@
 package hivesql.analysis.format;
 
-import java.util.Arrays;
-
-import com.sun.management.VMOption.Origin;
-
 public abstract class Block {
 	private int spaceCount;
 

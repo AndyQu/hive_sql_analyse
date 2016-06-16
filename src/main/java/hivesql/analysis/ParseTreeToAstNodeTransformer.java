@@ -7,7 +7,6 @@ import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.InterpreterRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.RuleContextWithAltNum;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -70,7 +69,8 @@ public class ParseTreeToAstNodeTransformer {
 			((ReferenceNode)resultNode).setLeveNum(snode.getLeveNum());
 			((ReferenceNode)resultNode).setOrderNumInSameLevel(snode.getOrderNumInSameLevel());
 			
-		} else if (ctx instanceof InterpreterRuleContext || ctx instanceof RuleContextWithAltNum
+		} else if (ctx instanceof InterpreterRuleContext 
+//				|| ctx instanceof RuleContextWithAltNum
 				|| ctx instanceof ParserRuleContext || ctx instanceof RuleContext) {
 			RuleContext pctx = (RuleContext) ctx;
 			resultNode.setNodeType(AstNodeType.Non_Terminal);

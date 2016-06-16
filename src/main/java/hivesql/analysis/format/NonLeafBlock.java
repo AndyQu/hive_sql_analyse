@@ -1,7 +1,6 @@
 package hivesql.analysis.format;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class NonLeafBlock extends Block {

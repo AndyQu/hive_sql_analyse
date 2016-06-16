@@ -4,6 +4,7 @@ import hivesql.analysis.format.Block;
 import hivesql.analysis.node.MyAstNode;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
+import hivesql.analysis.parse.HiveSQLParser.StatContext;
 
 import java.io.IOException;
 //import java.util.Arrays;
@@ -59,12 +60,9 @@ public class ParserTest {
 					getResourceAsStream("/auto_e_test.sql")));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
-			ParserRuleContext topCtx = parser.stat();
+			StatContext statCtx = (StatContext)parser.stat();
 			
-			
-			for(int i=0;i<parser.getTokenStream().size();i++){
-				LOGGER.debug("event_name=show_token index={} value={}", i, parser.getTokenStream().get(i));
-			}
+			System.out.println(statCtx.block.show());
 			
 //			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 //			showSegregatedClauses(mm);
@@ -72,24 +70,6 @@ public class ParserTest {
 			
 //			MultiKeyMap<Integer, MyAstNode> astM = ParseTreeToAstNodeTransformer.transform(mm, HiveSQLParser.ruleNames, parser.getInputStream());
 //			
-//
-//			
-//			MultiKeyMap<Integer, Block> formatedM = StructureFormatter.format(astM);
-//			
-//			LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
-//					2,
-//					0,
-//					formatedM.get(2, 0).show());
-			
-			
-//			formatedM.entrySet().stream().forEach(entry->{
-//				MultiKey<? extends Integer> k = entry.getKey();
-//				LOGGER.warn("event_name=show_formated_sql level_number={} order_num_in_same_level={} value=\n{}",
-//						k.getKey(0),
-//						k.getKey(1),
-//						entry.getValue());
-//			});
-			
 //			MultiKeyMap<Integer, MyAstNode> compressedAstM = SingleBranchCompressor.compress(astM);
 //			showCompressedNodes(compressedAstM);
 			
