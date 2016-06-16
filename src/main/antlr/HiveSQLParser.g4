@@ -23,14 +23,21 @@ options
 
 stat returns [NonLeafBlock block]
 @init
-{ $block = new NonLeafBlock(); }
+{ 
+	$block = new NonLeafBlock(); 
+	Boolean hasUnion = false;
+}
 :
 	select_clause
 	{ $block.addChild( $select_clause.block);    		}
 
 	(
 		UNION
-		{ $block.addChild(LeafBlockWithoutLine.build(0, getTokenText($UNION))); }
+		{ 
+			hasUnion=true;
+			$block.addChild( LineOnlyBlock.buildOne(0));
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($UNION)));
+		}
 
 		(
 			ALL
@@ -40,11 +47,21 @@ stat returns [NonLeafBlock block]
 			{ $block.addChild(LeafBlockWithoutLine.build(1, getTokenText($DISTINCT))); }
 
 		)?
-		{ $block.addChild(LeafBlockWithLine.build(0, "")); }
+		{ 
+			$block.addChild( LineOnlyBlock.build(0,2) );
+		}
 
 		select_clause
-		{ $block.addChild( $select_clause.block); }
+		{ 
+			$select_clause.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild( $select_clause.block);
+		}
 	)*
+	{
+		if(hasUnion){
+			$block.getChilds().get(0).setSpaceCount(Indent_Space_Count);
+		}
+	}
 ;
 
 select_clause returns [NonLeafBlock block]
@@ -62,9 +79,12 @@ select_clause returns [NonLeafBlock block]
 		FROM table_references
 		{
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($FROM)));
+			
 			Block b1 = $table_references.block;
 			b1.setSpaceCount(Indent_Space_Count);
 			$block.addChild(b1);
+			
+			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
 	)?
 	(
@@ -73,6 +93,8 @@ select_clause returns [NonLeafBlock block]
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($WHERE)));
 			$top_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($top_expr.block);
+			
+			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
 	)?
 	(
@@ -237,19 +259,19 @@ selected_column returns [NonLeafBlock block]
 		STRING
 			{ 
 				$block.addChild(
-					LeafBlockWithLine.build(0, getTokenText($STRING))
+					LeafBlockWithoutLine.build(0, getTokenText($STRING))
 				);
 			}
 		| INT
 			{
 				$block.addChild(
-					LeafBlockWithLine.build(0, getTokenText($INT))
+					LeafBlockWithoutLine.build(0, getTokenText($INT))
 				);
 			}
 		| DOUBLE
 			{
 				$block.addChild(
-					LeafBlockWithLine.build(0, getTokenText($DOUBLE))
+					LeafBlockWithoutLine.build(0, getTokenText($DOUBLE))
 				);
 			}
 		|
@@ -599,6 +621,12 @@ table_atom returns [NonLeafBlock block]
 	|
 	(
 		subquery subquery_alias
+		{
+			$block.addChild( $subquery.block );
+			
+			$subquery_alias.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild( $subquery_alias.block );
+		}
 	)
 	//   | ( LPAREN table_references RPAREN ) 
 	//   | ( OJ table_reference LEFT OUTER JOIN table_reference ON logic_expr )
@@ -719,9 +747,21 @@ partition_name returns [LeafBlockWithoutLine block]
 
 ;
 
-subquery
+subquery returns [NonLeafBlock block]
+@init{
+	$block=new NonLeafBlock();
+}
 :
 	LPAREN stat RPAREN
+	{
+		$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+		
+		$stat.block.setSpaceCount(Indent_Space_Count);
+		$block.addChild( $stat.block );
+		$block.addChild( LineOnlyBlock.buildOne(0) );
+		
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+	}
 ;
 
 //TODO
