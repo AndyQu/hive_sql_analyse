@@ -29,8 +29,13 @@ public class NonLeafBlock extends Block {
 
 	@Override
 	public String show() {
-		StringBuilder ret = new StringBuilder();
-		childs.stream().forEach(child -> ret.append(child.show()));
-		return addSpaces(getSpaceCount(), ret.toString());
+		if(childs!=null) {
+			StringBuilder ret = new StringBuilder();
+			childs.stream().forEach(child -> ret.append(child.show()));
+			return addSpaces(getSpaceCount(), ret.toString());
+		}else{
+			LOGGER.warn("event_name=NonLeafBlock_has_no_child");
+			return "";
+		}
 	}
 }
