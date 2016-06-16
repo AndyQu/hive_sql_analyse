@@ -215,7 +215,7 @@ common_alias returns [LeafBlockWithoutLine block]
 :
 	AS? ID
 	{
-   		$block = LeafBlockWithoutLine.build(0, " ");
+   		$block = LeafBlockWithoutLine.build(0, "");
    		try{
    			$block.addContent(getTokenText($AS)+" ");
    		}catch(Exception e){}
@@ -224,29 +224,75 @@ common_alias returns [LeafBlockWithoutLine block]
 
 ;
 
-selected_column
+selected_column returns [NonLeafBlock block]
 :
+{ $block = new NonLeafBlock(); }
 	(
 		STRING
+			{ 
+				$block.addChild(
+					LeafBlockWithLine.build(0, getTokenText($STRING))
+				);
+			}
 		| INT
+			{
+				$block.addChild(
+					LeafBlockWithLine.build(0, getTokenText($INT))
+				);
+			}
 		| DOUBLE
+			{
+				$block.addChild(
+					LeafBlockWithLine.build(0, getTokenText($DOUBLE))
+				);
+			}
 		|
 		(
-			func_call over_clause?
+			func_call
+				{
+					$block.addChild($func_call.block);
+				}
+			(over_clause
+				{
+					$over_clause.block.setSpaceCount(1);
+					$block.addChild($over_clause.block);
+				}
+			)?
 		)
 		| top_arith_expr
+			{
+				$block.addChild($top_arith_expr.block);
+			}
 	)
 	(
 		column_name_alias
+			{
+				$column_name_alias.block.setSpaceCount(1);
+				$block.addChild($column_name_alias.block);
+			}
 	)?
 ;
 
-selected_column_list
+selected_column_list returns [NonLeafBlock block]
 :
+{ $block = new NonLeafBlock(); }
 	selected_column
+		{
+			$block.addChild($selected_column.block);
+		}
 	(
 		COMMA selected_column
+			{
+				$block.addChild(
+					LeafBlockWithLine.build(0, getTokenText($COMMA))
+				);
+				$block.addChild($selected_column.block);
+			}
 	)*
+{ $block.addChild(
+	LeafBlockWithLine.build(0,"");
+	); 
+}
 ;
 
 index_name
@@ -259,7 +305,7 @@ column_name_list returns [NonLeafBlock block]
 { $block = new NonLeafBlock(); }
 	full_column_name
 		{ 
-			$block.addChild($full_column_name);
+			$block.addChild($full_column_name.block);
 			
 		}
 	(
@@ -293,115 +339,260 @@ select_key
 	SELECT
 ;
 
-group_by_clause
+group_by_clause returns [NonLeafBlock block]
 :
 	column_name_list
+	{
+		$block = $column_name_list.block
+	}
 ;
 
 /*
  */
-basic_logic_expr
+basic_logic_expr returns [NonLeafBlock block]
 :
-	top_arith_expr relational_op top_arith_expr
-	| top_arith_expr BETWEEN top_arith_expr AND top_arith_expr
-	| top_arith_expr is_or_is_not NULL
-	| case_clause
+{ $block = new NonLeafBlock(); }
+	top_arith_expr
+		{$block.addChild($top_arith_expr.block);} 
+	relational_op top_arith_expr
+		{
+			$relational_op.block.setSpaceCount(1);
+			$block.addChild($relational_op.block);
+			
+			$top_arith_expr.block.setSpaceCount(1);
+			$block.addChild($top_arith_expr.block);
+		}
+	| 
+	top_arith_expr 
+		{$block.addChild($top_arith_expr.block);}
+	BETWEEN top_arith_expr 
+		{
+			Block b1 = LeafBlockWithoutLine.build(1, getTokenText($BETWEEN));
+			$block.addChild(b1);
+			
+			$top_arith_expr.block.setSpaceCount(1);
+			$block.addChild($top_arith_expr.block);
+		}
+	AND top_arith_expr
+		{
+			Block b1 = LeafBlockWithoutLine.build(1, getTokenText($AND));
+			$block.addChild(b1);
+			
+			$top_arith_expr.block.setSpaceCount(1);
+			$block.addChild($top_arith_expr.block);
+		}
+	| 
+	top_arith_expr is_or_is_not NULL
+		{
+			$block.addChild($top_arith_expr.block);
+			
+			$is_or_is_not.block.setSpaceCount(1);
+			$block.addChild($is_or_is_not.block);
+			
+			Block b1 = LeafBlockWithoutLine.build(1, getTokenText($NULL));
+			$block.addChild(b1);
+		}
+	| 
+	case_clause
+		{ $block=$case_clause.block;}
 ;
 
-top_logic_expr
+top_logic_expr returns [NonLeafBlock block]
 :
+{ $block = new NonLeafBlock(); }
 	top_logic_expr
+		{
+			$block.addChild($top_logic_expr.block);
+		}
 	(
 		logic_op top_logic_expr
+			{
+				$logic_op.block.setSpaceCount(1);
+				$block.addChild($logic_op.block);
+				$top_logic_expr.block.setSpaceCount(1);
+				$block.addChild($top_logic_expr.block);
+			}
 	)+
-	| LPAREN top_logic_expr
+	| 
+	LPAREN top_logic_expr
+		{
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($LPAREN)));
+			$top_logic_expr.block.setSpaceCount(1);
+			$block.addChild($top_logic_expr.block);
+		}
 	(
 		logic_op top_logic_expr
+			{
+				$logic_op.block.setSpaceCount(1);
+				$block.addChild($logic_op.block);
+				$top_logic_expr.block.setSpaceCount(1);
+				$block.addChild($top_logic_expr.block);
+			}
 	)+ RPAREN
-	| basic_logic_expr
+		{
+			$block.addChild(LeafBlockWithoutLine.build(1, getTokenText($RPAREN)));
+		}
+	| 
+	basic_logic_expr
+		{
+			$block.addChild($basic_logic_expr.block);
+		}
 ;
 
 /* 这里注意排序，因为影响parse优先级 */
-arith_binary_op
+arith_binary_op returns [LeafBlockWithoutLine block]
 :
 	POWER_OP
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(POWER_OP)); }
 	| DIVIDE
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(DIVIDE)); }
 	| MOD
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(MOD)); }
 	| ASTERISK
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(ASTERISK)); }
 	| PLUS
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(PLUS)); }
 	| MINUS
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(MINUS)); }
 ;
 
-non_arith_expr
+non_arith_expr returns [Block block]
 :
 	func_call
+		{ $block = $func_call.block; }
 	| full_column_name
+		{ $block = $full_column_name.block; }
 	| DOUBLE
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($DOUBLE)); }
 	| INT
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($INT)); }
 	| STRING
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($STRING)); }
 ;
 
-top_arith_expr
+top_arith_expr returns [NonLeafBlock block]
 :
+{ block = new NonLeafBlock(); }
 	top_arith_expr
+		{ $block.addChild($top_arith_expr.block); }
 	(
 		arith_binary_op top_arith_expr
+			{
+				$arith_binary_op.block.setSpaceCount(1);
+				$block.addChild($arith_binary_op.block);
+				
+				$top_arith_expr.block.setSpaceCount(1);
+				$block.addChild($top_arith_expr.block);
+			}
 	)+
 	| LPAREN top_arith_expr
+		{
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );
+			
+			$top_arith_expr.block.setSpaceCount(1);
+			$block.addChild($top_arith_expr.block);
+		}
 	(
 		arith_binary_op top_arith_expr
+			{
+				$arith_binary_op.block.setSpaceCount(1);
+				$block.addChild($arith_binary_op.block);
+				
+				$top_arith_expr.block.setSpaceCount(1);
+				$block.addChild($top_arith_expr.block);
+			}
 	)+ RPAREN
+		{
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+		}
 	| non_arith_expr
+		{ $block.add($non_arith_expr.block); }
 	| case_clause
+		{ $block.add($case_clause.block); }
 ;
 
-top_expr
+top_expr returns [NonLeafBlock block]
 :
 	top_arith_expr
+		{ $block=$top_arith_expr.block; }
 	| top_logic_expr
+		{ $block=$top_logic_expr.block; }
 ;
 
 /*
  * 函数调用
  */
-func_call
+func_call returns [NonLeafBlock block]
 :
-	func_name LPAREN func_para_list? RPAREN
+{ $block = new NonLeafBlock(); }
+	func_name LPAREN 
+		{
+			$block.addChild($func_name.block);
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );
+		}
+	(func_para_list
+		{
+			$block.addChild( $func_para_list.block );
+		}
+	)? 
+	RPAREN
+		{
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+		}
 ;
 
-func_name
+func_name returns [LeafBlockWithoutLine block]
 :
-	ID
+	ID { $block = LeafBlockWithoutLine.build(0, getTokenText($ID)); }
 ;
 
-func_para
+func_para returns [NonLeafBlock block]
 :
-	top_expr
+	top_expr { $block = $top_expr.block; }
 ;
 
-func_para_list
+func_para_list returns [NonLeafBlock block]
 :
+{ $block = new NonLeafBlock(); }
 	func_para
+		{
+			$block.addChild( $func_para.block);
+		}
 	(
 		COMMA func_para
+			{
+				$block.addChild( $block.addChild( LeafBlockWithoutLine.build(0, getTokenText($COMMA)) ) );
+				$func_para.block.setSpaceCount(1);
+				$block.addChild( $func_para.block );
+			}
 	)*
 ;
 
-relational_op
+relational_op returns [LeafBlockWithLine block]
 :
 	DOUBLE_EQ
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($DOUBLE_EQ)); }
 	| EQ
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($EQ)); }
 	| LTH
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($LTH)); }
 	| GTH
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($GTH)); }
 	| NOT_EQ
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($NOT_EQ)); }
 	| LET
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($LET)); }
 	| GET
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($GET)); }
 ;
 
-logic_op
+logic_op returns [LeafBlockWithoutLine block]
 :
 	AND
-	| OR
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($AND)); }
+	| 
+	OR
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText($OR)); }
 ;
 
 expr_op
@@ -412,10 +603,12 @@ expr_op
 	| NOT
 ;
 
-is_or_is_not
+is_or_is_not returns [LeafBlockWithoutLine block]
 :
 	IS
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(IS)); }
 	| IS NOT
+		{ $block = LeafBlockWithoutLine.build(0, getTokenText(IS_NOT)); }
 ;
 
 table_references
@@ -564,40 +757,69 @@ subquery
 //TODO
 //row_number() over 支持 distribute by，但是在Hive语法手册中找不到官方正式定义
 
-over_clause
+over_clause returns [NonLeafBlock block]
 :
+{ $block = NonLeafBlock(); }
 	OVER LPAREN PARTITION BY column_name_list
+		{
+			$block.addChild( LeafBlockWithoutLine(0, getTokenText($OVER)) );
+			$block.addChild( LeafBlockWithLine(1, getTokenText($LPAREN)) );
+			
+			$block.addChild( LeafBlockWithoutLine(Indent_Space_Count, getTokenText($PARTITION)) );
+			$block.addChild( LeafBlockWithLine(1, getTokenText($BY)) );
+			$column_name_list.block.setSpaceCount(Indent_Space_Count*2);
+			$block.addChild( $column_name_list.block );
+		}
 	(
 		order_clause
-	)? RPAREN
+		{
+			$order_clause.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild($order_clause.block);
+		}
+	)? 
+	RPAREN
+	{
+		$block.addChild( LeafBlockWithLine(0, getTokenText($RPAREN)) );
+	}
 ;
 /**
  * case_clause既可以作算术表达式，又可以做逻辑表达式放到where里面
  */
-case_clause
+case_clause returns [NonLeafBlock block]
 :
+{ $block = new NonLeafBlock(); }
 	CASE
+		{ $block.addChild( LeafBlockWithLine.build(0, getTokenText($CASE)) ); }
 	(
 		WHEN top_logic_expr THEN top_expr
+			{
+				$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($WHEN)) );
+				
+				$top_logic_expr.block.setSpaceCount(Indent_Space_Count);
+				$block.addChild($top_logic_expr.block);
+				$block.addChild( LeafBlockWithLine.build(0,"") );
+				
+				
+				$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count*2, getTokenText($THEN)) );
+				
+				$top_expr.block.setSpaceCount(Indent_Space_Count);
+				$block.addChild($top_expr.block);
+				$block.addChild( LeafBlockWithLine.build(0,"") );
+			}
 	)+ ELSE top_expr END
+		{
+			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($ELSE)) );
+			
+			$top_expr.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild($top_expr.block);
+			
+			$block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenText($END)) );
+		}
 ;
 
-order_clause
+order_clause returns [NonLeafBlock block]
 :
-	ORDER BY full_column_name
-	(
-		DESC
-		| ASC
-	)?
-	(
-		(
-			COMMA full_column_name
-			(
-				DESC
-				| ASC
-			)?
-		)
-	)*
+ordered_column_name_list { $block=$ordered_column_name_list.block; }
 ;
 
 cluster_clause returns [NonLeafBlock block]
@@ -610,19 +832,51 @@ distribute_clause returns [NonLeafBlock block]
 	column_name_list { $block= $column_name_list.block; }
 ;
 
-sort_clause
+sort_clause returns [NonLeafBlock block]
 :
+ordered_column_name_list { $block=$ordered_column_name_list.block; }
+;
+ordered_column_name_list returns [NonLeafBlock block]
+:
+{ $block=new NonLeafBlock(); }
 	full_column_name
+		{ $block.addChild($full_column_name.block); }
 	(
 		DESC
-		| ASC
+			{ $block.addChild(
+					LeafBlockWithoutLine.build(1, getTokenText($DESC))
+				); 
+			}
+		| 
+		ASC
+			{ $block.addChild(
+					LeafBlockWithoutLine.build(1, getTokenText($ASC))
+				); 
+			}
 	)?
 	(
 		(
 			COMMA full_column_name
+				{
+					$block.addChild(
+						LeafBlockWitLine.build(0, getTokenText($COMMA))
+					); 
+					$block.addChild($full_column_name.block);
+				}
 			(
 				DESC
-				| ASC
+					{
+						$block.addChild(
+							LeafBlockWithoutLine.build(1, getTokenText($DESC))
+						);
+					} 
+				| 
+				ASC
+					{ 
+						$block.addChild(
+							LeafBlockWithoutLine.build(1, getTokenText($ASC))
+						); 
+					}
 			)?
 		)
 	)*
