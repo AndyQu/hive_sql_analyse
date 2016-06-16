@@ -3,6 +3,9 @@ parser grammar HiveSQLParser;
 @header {
     package hivesql.analysis.parse;
     import hivesql.analysis.format.*;
+
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
 }
 
 options
@@ -11,6 +14,7 @@ options
 }
 
 @members {
+    private static Logger LOGGER = LoggerFactory.getLogger(HiveSQLParser.class);
 	public static final int Indent_Space_Count=2;
 	public String getTokenText(Token t) {
 		return getTokenStream().getText(new Interval(t.getTokenIndex(), t.getTokenIndex()));
@@ -18,9 +22,9 @@ options
 }
 
 stat returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock(); }
 :
-	{ $block = new NonLeafBlock(); }
-
 	select_clause
 	{ $block.addChild( $select_clause.block);    		}
 
@@ -44,8 +48,9 @@ stat returns [NonLeafBlock block]
 ;
 
 select_clause returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	SELECT selected_column_list
 		{ 
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($SELECT)));
@@ -114,9 +119,9 @@ schema_name returns [LeafBlockWithoutLine block]
 ;
 
 table_name returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock(); }
 :
-	{$block = new NonLeafBlock();}
-
 	(
 		schema_name DOT
 		{
@@ -137,9 +142,9 @@ table_name returns [NonLeafBlock block]
  * 2. '*' 也暂时放在这里
  */
 full_column_name returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock(); }
 :
-	{ $block = new NonLeafBlock(); }
-
 	(
 		DISTINCT
 		{$block.addChild(LeafBlockWithoutLine.build(1, getTokenText($DISTINCT)));}
@@ -225,8 +230,9 @@ common_alias returns [LeafBlockWithoutLine block]
 ;
 
 selected_column returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	(
 		STRING
 			{ 
@@ -274,8 +280,9 @@ selected_column returns [NonLeafBlock block]
 ;
 
 selected_column_list returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	selected_column
 		{
 			$block.addChild($selected_column.block);
@@ -295,14 +302,10 @@ selected_column_list returns [NonLeafBlock block]
 }
 ;
 
-index_name
-:
-	ID
-;
-
 column_name_list returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	full_column_name
 		{ 
 			$block.addChild($full_column_name.block);
@@ -320,24 +323,7 @@ column_name_list returns [NonLeafBlock block]
    }
 
 ;
-/**
-column_list_clause
-   //: column_name ( COMMA column_name )*
-   : func_call ((AS)? column_name_alias)? (COMMA func_call)*
-   ;
-*/
-from_clause
-:
-	FROM table_name
-	(
-		COMMA table_name
-	)*
-;
 
-select_key
-:
-	SELECT
-;
 
 group_by_clause returns [NonLeafBlock block]
 :
@@ -380,32 +366,43 @@ non_arith_expr returns [Block block]
 ;
 
 top_expr returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
-	
-	LPAREN top_expr
-		{
-			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($LPAREN)));
-			$top_expr.block.setSpaceCount(1);
-			$block.addChild($top_expr.block);
-		}
-	(
-		binary_op top_expr
+:
+		LPAREN top_expr
 			{
-				$binary_op.block.setSpaceCount(1);
-				$block.addChild($binary_op.block);
+				$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($LPAREN)));
 				
-				$top_expr.block.setSpaceCount(1);
-				$block.addChild($top_expr.block);
+				_localctx.top_expr.block.setSpaceCount(1);
+				$block.addChild(_localctx.top_expr.block);
 			}
-	)+ RPAREN
-		{
-			$block.addChild(LeafBlockWithoutLine.build(1, getTokenText($RPAREN)));
-		}
+		(
+			binary_op top_expr
+				{
+					$binary_op.block.setSpaceCount(1);
+					$block.addChild($binary_op.block);
+					
+					_localctx.top_expr.block.setSpaceCount(1);
+					$block.addChild(_localctx.top_expr.block);
+				}
+		)+ RPAREN
+			{
+				$block.addChild(LeafBlockWithoutLine.build(1, getTokenText($RPAREN)));
+			}
 	| 
 	top_expr
 		{
-			$block.addChild($top_expr.block);
+		    /*
+		    加这一句是为了让antlr4生成
+		        ((Top_exprContext)_localctx).top_expr = top_expr(0);
+		    否则, antlr4 只会生成
+		        top_expr(0);
+		    */
+		    $top_expr.block=null;
+
+            Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
+            if($block==null) $block = new NonLeafBlock();
+			$block.addChild( ctx.block );
 		}
 	(
 		binary_op top_expr
@@ -413,31 +410,39 @@ top_expr returns [NonLeafBlock block]
 				$binary_op.block.setSpaceCount(1);
 				$block.addChild($binary_op.block);
 				
-				$top_expr.block.setSpaceCount(1);
-				$block.addChild($top_expr.block);
+				_localctx.top_expr.block.setSpaceCount(1);
+				$block.addChild(_localctx.top_expr.block);
 			}
 	)+
+
+	
 	| 
 	top_expr 
-		{$block.addChild($top_expr.block);}
+		{
+            Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
+            if($block==null) $block = new NonLeafBlock();
+        	$block.addChild( ctx.block );
+        }
 	BETWEEN top_expr 
 		{
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($BETWEEN)) );
 			
-			$top_expr.block.setSpaceCount(1);
-			$block.addChild($top_expr.block);
+			_localctx.top_expr.block.setSpaceCount(1);
+			$block.addChild(_localctx.top_expr.block);
 		}
 	AND top_expr
 		{
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($AND)) );
 			
-			$top_expr.block.setSpaceCount(1);
-			$block.addChild($top_expr.block);
+			_localctx.top_expr.block.setSpaceCount(1);
+			$block.addChild(_localctx.top_expr.block);
 		}
 	| 
 	top_expr is_or_is_not NULL
 		{
-			$block.addChild($top_expr.block);
+			Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
+            if($block==null) $block = new NonLeafBlock();
+            $block.addChild( ctx.block );
 			
 			$is_or_is_not.block.setSpaceCount(1);
 			$block.addChild($is_or_is_not.block);
@@ -457,8 +462,9 @@ top_expr returns [NonLeafBlock block]
  * 函数调用
  */
 func_call returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	func_name LPAREN 
 		{
 			$block.addChild($func_name.block);
@@ -486,8 +492,9 @@ func_para returns [NonLeafBlock block]
 ;
 
 func_para_list returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	func_para
 		{
 			$block.addChild( $func_para.block);
@@ -545,8 +552,9 @@ is_or_is_not returns [LeafBlockWithoutLine block]
 ;
 
 table_references returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	table_atom
 		{ $block.addChild( $table_atom.block ); }
 	(
@@ -567,8 +575,9 @@ table_references returns [NonLeafBlock block]
 ;
 
 table_atom returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	(
 		table_name
 			{ $block.addChild( $table_name.block ); }
@@ -598,8 +607,9 @@ table_atom returns [NonLeafBlock block]
 ;
 
 join_clause returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	(
 		(
 			LEFT
@@ -647,8 +657,9 @@ join_clause returns [NonLeafBlock block]
 ;
 
 join_condition returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	ON top_expr
 		{
 			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($ON)) );
@@ -684,8 +695,9 @@ partition_clause returns [NonLeafBlock block]
 ;
 
 partition_names returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	partition_name
 		{
 			$block.addChild( $partition_name.block );
@@ -718,8 +730,9 @@ subquery
 //row_number() over 支持 distribute by，但是在Hive语法手册中找不到官方正式定义
 
 over_clause returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	OVER LPAREN PARTITION BY column_name_list
 		{
 			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($OVER)) );
@@ -746,8 +759,9 @@ over_clause returns [NonLeafBlock block]
  * case_clause既可以作算术表达式，又可以做逻辑表达式放到where里面
  */
 case_clause returns [NonLeafBlock block]
-:
+@init
 { $block = new NonLeafBlock(); }
+:
 	CASE
 		{ $block.addChild( LeafBlockWithLine.build(0, getTokenText($CASE)) ); }
 	(
@@ -797,8 +811,9 @@ sort_clause returns [NonLeafBlock block]
 ordered_column_name_list { $block=$ordered_column_name_list.block; }
 ;
 ordered_column_name_list returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock(); }
 :
-{ $block=new NonLeafBlock(); }
 	full_column_name
 		{ $block.addChild($full_column_name.block); }
 	(
