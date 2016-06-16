@@ -3,7 +3,7 @@ package hivesql.analysis.format;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LeafBlockWithLines extends Block {
+public class LeafBlockWithLine extends Block {
 	private List<String> lines;
 
 	public List<String> getLines() {
@@ -21,8 +21,8 @@ public class LeafBlockWithLines extends Block {
 		lines.add(line);
 	}
 	
-	public static LeafBlockWithLines build(int spaceCount, String line){
-		LeafBlockWithLines b = new LeafBlockWithLines();
+	public static LeafBlockWithLine build(int spaceCount, String line){
+		LeafBlockWithLine b = new LeafBlockWithLine();
 		b.setSpaceCount(spaceCount);
 		b.addLine(line);
 		return b;
