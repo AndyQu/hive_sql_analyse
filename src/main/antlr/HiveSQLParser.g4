@@ -401,10 +401,8 @@ top_expr returns [NonLeafBlock block]
 		(
 			binary_op top_expr
 				{
-					$binary_op.block.setSpaceCount(1);
 					$block.addChild($binary_op.block);
 					
-					_localctx.top_expr.block.setSpaceCount(1);
 					$block.addChild(_localctx.top_expr.block);
 				}
 		)+ RPAREN
@@ -429,10 +427,8 @@ top_expr returns [NonLeafBlock block]
 	(
 		binary_op top_expr
 			{
-				$binary_op.block.setSpaceCount(1);
 				$block.addChild($binary_op.block);
 				
-				_localctx.top_expr.block.setSpaceCount(1);
 				$block.addChild(_localctx.top_expr.block);
 			}
 	)+
@@ -531,9 +527,17 @@ func_para_list returns [NonLeafBlock block]
 	)*
 ;
 
-binary_op returns [Block block]
+binary_op returns [NonLeafBlock block]
+@init{
+	$block = new NonLeafBlock();
+}
 :
-relational_op {$block=$relational_op.block;}
+relational_op 
+	{
+		$relational_op.block.setSpaceCount(1);
+		$block.addChild( $relational_op.block );
+		$block.addChild( LeafBlockWithoutLine.build(1,"") );
+	}
 |logic_op 
 	{
 		$block = new NonLeafBlock();
@@ -546,7 +550,12 @@ relational_op {$block=$relational_op.block;}
 		
 		b.addChild( LineOnlyBlock.buildOne(0) );
 	}
-|arith_binary_op {$block=$arith_binary_op.block;}
+|arith_binary_op 
+	{
+		$arith_binary_op.block.setSpaceCount(1);
+		$block.addChild( $arith_binary_op.block );
+		$block.addChild( LeafBlockWithoutLine.build(1,"") );
+	}
 ;
 
 relational_op returns [LeafBlockWithoutLine block]
