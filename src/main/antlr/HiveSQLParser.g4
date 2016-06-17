@@ -531,10 +531,21 @@ func_para_list returns [NonLeafBlock block]
 	)*
 ;
 
-binary_op returns [LeafBlockWithoutLine block]
+binary_op returns [Block block]
 :
 relational_op {$block=$relational_op.block;}
-|logic_op {$block=$logic_op.block;}
+|logic_op 
+	{
+		$block = new NonLeafBlock();
+		
+		NonLeafBlock b = (NonLeafBlock)$block;
+		
+		b.addChild( LineOnlyBlock.buildOne(0) );
+		
+		b.addChild( $logic_op.block );
+		
+		b.addChild( LineOnlyBlock.buildOne(0) );
+	}
 |arith_binary_op {$block=$arith_binary_op.block;}
 ;
 
