@@ -11,13 +11,11 @@ public final class LineOnlyBlock extends Block {
 		this.lineCount = lineCount;
 	}
 	public static LineOnlyBlock buildOne(int sc){
-		LineOnlyBlock b = new LineOnlyBlock();
-		b.setSpaceCount(sc);
-		b.setLineCount(1);
-		return b;
+		return build(sc, 1);
 	}
 	public static LineOnlyBlock build(int sc, int lc){
 		LineOnlyBlock b = new LineOnlyBlock();
+		b.setSpaceCount(sc);
 		b.setLineCount(lc);
 		return b;
 	}

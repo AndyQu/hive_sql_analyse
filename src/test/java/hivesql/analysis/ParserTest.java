@@ -1,6 +1,5 @@
 package hivesql.analysis;
 
-import hivesql.analysis.format.Block;
 import hivesql.analysis.node.MyAstNode;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
@@ -57,12 +56,12 @@ public class ParserTest {
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
 //					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
-					getResourceAsStream("/auto_e_test.sql")));
+					getResourceAsStream("/basic_sqls/logic_expr.sql")));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
 			StatContext statCtx = (StatContext)parser.stat();
 			
-			System.out.println(statCtx.block.show());
+			LOGGER.warn("\n{}", statCtx.block.show());
 			
 //			MultiKeyMap<Integer, RuleContext> mm = SelectClauseSegregator.segregate(topCtx);
 //			showSegregatedClauses(mm);

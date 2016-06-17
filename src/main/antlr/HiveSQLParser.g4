@@ -355,7 +355,6 @@ group_by_clause returns [NonLeafBlock block]
 	}
 ;
 
-
 /* 这里注意排序，因为影响parse优先级 */
 arith_binary_op returns [LeafBlockWithoutLine block]
 :
@@ -387,22 +386,92 @@ non_arith_expr returns [Block block]
 		{ $block = LeafBlockWithoutLine.build(0, getTokenText($STRING)); }
 ;
 
+logic_expr returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock(); }
+:
+
+;
+
 top_expr returns [NonLeafBlock block]
 @init
 { $block = new NonLeafBlock(); }
 :
+	
+//逻辑运算符：换行
+	LPAREN  top_expr
+		{
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($LPAREN)));
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+			
+			_localctx.top_expr.block.setSpaceCount( Indent_Space_Count );
+			$block.addChild(_localctx.top_expr.block);
+			
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+		}
+	(
+		logic_op top_expr
+			{
+				$logic_op.block.setSpaceCount( Indent_Space_Count );
+				$block.addChild( $logic_op.block );
+				$block.addChild( LineOnlyBlock.buildOne(0) );
+						
+				_localctx.top_expr.block.setSpaceCount( Indent_Space_Count );
+				$block.addChild(_localctx.top_expr.block);
+			
+				$block.addChild( LineOnlyBlock.buildOne(0) );
+			}
+	)+ RPAREN
+			{
+				$block.addChild(LeafBlockWithLine.build(0, getTokenText($RPAREN)));
+				$block.addChild( LineOnlyBlock.buildOne(0) );
+			}
+	|
+//逻辑运算符：换行
+	top_expr
+		{
+			/*
+			    加这一句是为了让antlr4生成
+			        ((Top_exprContext)_localctx).top_expr = top_expr(0);
+			    否则, antlr4 只会生成
+			        top_expr(0);
+			*/
+			    $top_expr.block=null;
+	
+	        Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
+	        if($block==null) 
+	        	$block = new NonLeafBlock();
+			$block.addChild( ctx.block );
+			
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+		}
+	(
+		logic_op top_expr
+			{
+				$block.addChild( $logic_op.block );
+				$block.addChild( LineOnlyBlock.buildOne(0) );
+						
+				$block.addChild(_localctx.top_expr.block);
+			
+				$block.addChild( LineOnlyBlock.buildOne(0) );
+			}
+	)+
+	
+	|
+//非逻辑运算符：不换行
 		LPAREN top_expr
 			{
 				$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($LPAREN)));
 				
-				_localctx.top_expr.block.setSpaceCount(1);
 				$block.addChild(_localctx.top_expr.block);
 			}
 		(
-			binary_op top_expr
+			non_logic_op top_expr
 				{
-					$block.addChild($binary_op.block);
+					$non_logic_op.block.setSpaceCount(1);
+					$block.addChild($non_logic_op.block);
 					
+					_localctx.top_expr.block.setSpaceCount(1);
 					$block.addChild(_localctx.top_expr.block);
 				}
 		)+ RPAREN
@@ -410,29 +479,26 @@ top_expr returns [NonLeafBlock block]
 				$block.addChild(LeafBlockWithoutLine.build(1, getTokenText($RPAREN)));
 			}
 	| 
+//非逻辑运算符：不换行
 	top_expr
 		{
-		    /*
-		    加这一句是为了让antlr4生成
-		        ((Top_exprContext)_localctx).top_expr = top_expr(0);
-		    否则, antlr4 只会生成
-		        top_expr(0);
-		    */
-		    $top_expr.block=null;
-
-            Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
-            if($block==null) $block = new NonLeafBlock();
+			Top_exprContext ctx =(Top_exprContext) getContext().getChild(0);
+	        if($block==null) 
+	        	$block = new NonLeafBlock();
 			$block.addChild( ctx.block );
+			
+//			$block.addChild(_localctx.top_expr.block);
 		}
 	(
-		binary_op top_expr
+		non_logic_op top_expr
 			{
-				$block.addChild($binary_op.block);
-				
+				$non_logic_op.block.setSpaceCount(1);
+				$block.addChild($non_logic_op.block);
+					
+				_localctx.top_expr.block.setSpaceCount(1);
 				$block.addChild(_localctx.top_expr.block);
 			}
 	)+
-
 	
 	| 
 	top_expr 
@@ -527,34 +593,15 @@ func_para_list returns [NonLeafBlock block]
 	)*
 ;
 
-binary_op returns [NonLeafBlock block]
-@init{
-	$block = new NonLeafBlock();
-}
+non_logic_op returns [LeafBlockWithoutLine block]
 :
 relational_op 
-	{
-		$relational_op.block.setSpaceCount(1);
-		$block.addChild( $relational_op.block );
-		$block.addChild( LeafBlockWithoutLine.build(1,"") );
-	}
-|logic_op 
-	{
-		$block = new NonLeafBlock();
-		
-		NonLeafBlock b = (NonLeafBlock)$block;
-		
-		b.addChild( LineOnlyBlock.buildOne(0) );
-		
-		b.addChild( $logic_op.block );
-		
-		b.addChild( LineOnlyBlock.buildOne(0) );
+	{ 
+		$block = $relational_op.block;
 	}
 |arith_binary_op 
 	{
-		$arith_binary_op.block.setSpaceCount(1);
-		$block.addChild( $arith_binary_op.block );
-		$block.addChild( LeafBlockWithoutLine.build(1,"") );
+		$block = $arith_binary_op.block;
 	}
 ;
 
