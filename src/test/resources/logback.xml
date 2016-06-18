@@ -3,9 +3,9 @@
 	<appender name="infoAppender"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>WARN</level>
+			<level>INFO</level>
 		</filter>
-		<File>/opt/logs/hive-sql/test.log</File>
+		<File>/tmp/logs/hive-sql/test.log</File>
 		<Append>true</Append>
 		<encoder>
 			<pattern>[%d{HH:mm:ss.SSS}][%-5level][%logger{0}] - %msg%n</pattern>
@@ -18,7 +18,7 @@
 
 		<rollingPolicy
 			class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-			<fileNamePattern>/opt/logs/hive-sql/test.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>/tmp/logs/hive-sql/test.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<maxFileSize>300KB</maxFileSize>
 			<maxHistory>3</maxHistory>

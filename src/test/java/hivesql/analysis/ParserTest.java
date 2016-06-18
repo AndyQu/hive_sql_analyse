@@ -56,9 +56,9 @@ public class ParserTest {
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
 //					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
-					getResourceAsStream("/basic_sqls/logic_expr.sql")));
+					getResourceAsStream("/basic_sqls/simple_logic_expr.sql")));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
-			parser.addErrorListener(new HiveErrorListener(parser));
+//			parser.addErrorListener(new HiveErrorListener(parser));
 			StatContext statCtx = (StatContext)parser.stat();
 			
 			LOGGER.warn("\n{}", statCtx.block.show());
