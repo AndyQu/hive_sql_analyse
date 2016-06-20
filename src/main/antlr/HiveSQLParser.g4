@@ -40,7 +40,7 @@ stat returns [NonLeafBlock block]
 		UNION
 		{ 
 			hasUnion=true;
-			$block.addChild( LineOnlyBlock.buildOne(0));
+			$block.addChild( LineOnlyBlock.build());
 			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($UNION)));
 		}
 
@@ -79,7 +79,7 @@ select_clause returns [NonLeafBlock block]
 			$selected_column_list.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($selected_column_list.block);
 			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	(
 		FROM table_references
@@ -90,7 +90,7 @@ select_clause returns [NonLeafBlock block]
 			b1.setSpaceCount(Indent_Space_Count);
 			$block.addChild(b1);
 			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	)?
 	(
@@ -99,8 +99,6 @@ select_clause returns [NonLeafBlock block]
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($WHERE)));
 			$logic_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($logic_expr.block);
-			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
 	)?
 	(
@@ -279,10 +277,10 @@ selected_column returns [NonLeafBlock block]
 				{
 					$block.addChild($func_call.block);
 				}
-			(over_clause
+			(function_over_clause
 				{
-					$over_clause.block.setSpaceCount(1);
-					$block.addChild($over_clause.block);
+					$function_over_clause.block.setSpaceCount(1);
+					$block.addChild($function_over_clause.block);
 				}
 			)?
 		)
@@ -382,14 +380,14 @@ basic_logic_expr returns [NonLeafBlock block]
 
 			$block.addChild( $logic_operand.block );
 			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	(
 		logic_op logic_operand
 		{
 			$block.addChild( $logic_op.block );
 			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 			
 			$block.addChild( $logic_operand.block );
 		}
@@ -446,15 +444,15 @@ logic_expr returns [NonLeafBlock block]
 	        if($block==null) 
 	        	$block = new NonLeafBlock("logic_expr");
 			$block.addChild( ctx.block );
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	logic_op logic_expr
 		{
 			$block.addChild( $logic_op.block );
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 			
 			$block.addChild( _localctx.logic_expr.block );
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	|
 	NOT logic_expr
@@ -807,11 +805,12 @@ join_clause returns [NonLeafBlock block]
 	)? JOIN table_atom
 			{
 				$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($JOIN)) );
-				
-				$table_atom.block.setSpaceCount(1);
+
+				$block.addChild( LineOnlyBlock.build() );				
+//				$table_atom.block.setSpaceCount(1);
 				$block.addChild( $table_atom.block); 
 				
-				$block.addChild( LeafBlockWithLine.build(0,"") );
+				$block.addChild( LineOnlyBlock.build() );
 			}
 	(
 		join_condition
@@ -827,7 +826,7 @@ join_clause returns [NonLeafBlock block]
 			$table_atom.block.setSpaceCount(1);
 			$block.addChild( $table_atom.block); 
 				
-			$block.addChild( LeafBlockWithLine.build(0,"") );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	(
 		join_condition
@@ -912,7 +911,7 @@ subquery returns [NonLeafBlock block]
 		
 		$stat.block.setSpaceCount(Indent_Space_Count);
 		$block.addChild( $stat.block );
-		$block.addChild( LineOnlyBlock.buildOne(0) );
+		$block.addChild( LineOnlyBlock.build() );
 		
 		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
 	}
@@ -923,7 +922,7 @@ subquery returns [NonLeafBlock block]
 //TODO
 //row_number() over 支持 distribute by，但是在Hive语法手册中找不到官方正式定义
 
-over_clause returns [NonLeafBlock block]
+function_over_clause returns [NonLeafBlock block]
 @init
 { $block = new NonLeafBlock("over_clause"); }
 :
@@ -934,6 +933,7 @@ over_clause returns [NonLeafBlock block]
 			
 			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($PARTITION)) );
 			$block.addChild( LeafBlockWithLine.build(1, getTokenText($BY)) );
+			
 			$column_name_list.block.setSpaceCount(Indent_Space_Count*2);
 			$block.addChild( $column_name_list.block );
 		}
@@ -946,6 +946,7 @@ over_clause returns [NonLeafBlock block]
 	)? 
 	RPAREN
 	{
+		$block.addChild( LineOnlyBlock.build() );
 		$block.addChild( LeafBlockWithLine.build(0, getTokenText($RPAREN)) );
 	}
 ;
@@ -975,14 +976,14 @@ case_clause returns [NonLeafBlock block]
 			}
 		) THEN top_expr
 			{
-				$block.addChild( LineOnlyBlock.buildOne(0) );
+				$block.addChild( LineOnlyBlock.build() );
 				
 				
 				$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count*2, getTokenText($THEN)) );
 				
 				$top_expr.block.setSpaceCount(Indent_Space_Count);
 				$block.addChild($top_expr.block);
-				$block.addChild( LineOnlyBlock.buildOne(0) );
+				$block.addChild( LineOnlyBlock.build() );
 			}
 	)+ ELSE top_expr END
 		{
@@ -996,8 +997,19 @@ case_clause returns [NonLeafBlock block]
 ;
 
 order_clause returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock("order_clause"); }
 :
-ordered_column_name_list { $block=$ordered_column_name_list.block; }
+ORDER BY ordered_column_name_list 
+	{ 
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($ORDER)) );
+		$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($BY)) );
+		
+		$block.addChild( LineOnlyBlock.build() );
+		
+		$ordered_column_name_list.block.setSpaceCount(Indent_Space_Count);
+		$block.addChild( $ordered_column_name_list.block );
+	}
 ;
 
 cluster_clause returns [NonLeafBlock block]

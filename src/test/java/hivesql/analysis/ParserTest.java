@@ -37,6 +37,10 @@ public class ParserTest {
 	    	  {"/basic_sqls/logic_expr.sql"}
 	    	  , 
 	    	  {"/basic_sqls/simple_logic_expr.sql"}
+	    	  ,
+	    	  {"/basic_sqls/sub_query_join.sql"}
+	    	  ,
+	    	  {"/basic_sqls/function_over.sql"}
 	      };
 	   }
 	
@@ -66,7 +70,7 @@ public class ParserTest {
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().getResourceAsStream(sqlFile)));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
-//			parser.addErrorListener(new HiveErrorListener(parser));
+			parser.addErrorListener(new HiveErrorListener(parser));
 			StatContext statCtx = (StatContext)parser.stat();
 			
 			LOGGER.warn("\n{}", statCtx.block.show());
