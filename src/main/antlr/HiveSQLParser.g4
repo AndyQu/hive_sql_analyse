@@ -490,6 +490,15 @@ logic_expr returns [NonLeafBlock block]
 			$block.addChild( ((Logic_exprContext)_localctx).logic_expr.block );
 			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
+	|
+	NOT logic_expr
+		{
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($NOT)) );
+			
+			$logic_expr.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild( ((Logic_exprContext)_localctx).logic_expr.block );
+		}
+	
 ;
 
 //==================================算术表达式========================================================
@@ -519,27 +528,13 @@ arith_binary_op arith_operand
 	}
 ;
 
-paren_basic_arith_expr returns [NonLeafBlock block]
-@init{$block = new NonLeafBlock("paren_basic");}
-:
-LPAREN basic_arith_expr RPAREN
-	{
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );
-		$block.addChild( $basic_arith_expr.block );
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
-	}
-|
-basic_arith_expr
-	{ $block = $basic_arith_expr.block; }
-;
-
-mix_arith_expr returns [Block block]
+arith_component returns [Block block]
 :
 arith_operand 
 	{ $block = $arith_operand.block; }
 |
-paren_basic_arith_expr
-	{ $block = $paren_basic_arith_expr.block; }
+basic_arith_expr
+	{ $block = $basic_arith_expr.block; }
 ;
 
 arith_expr returns [NonLeafBlock block]
@@ -547,45 +542,31 @@ arith_expr returns [NonLeafBlock block]
 	$block = new NonLeafBlock("arith_expr");
 }
 :
-	paren_basic_arith_expr
+	arith_component 
+		{ $block.addChild( $arith_component.block ); }
 	|
-	LPAREN mix_arith_expr
+	LPAREN arith_expr RPAREN
 		{
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($LPAREN)) );
-			$block.addChild(_localctx.mix_arith_expr.block);
-		}
-	(
-		arith_binary_op 	mix_arith_expr
-			{
-				$arith_binary_op.block.setSpaceCount(1);
-				$block.addChild( $arith_binary_op.block  );
-				
-				$mix_arith_expr.block.setSpaceCount(1);
-				$block.addChild( $mix_arith_expr.block );
-			}
-	)+
-	RPAREN
-		{
+			$block.addChild( $arith_expr.block);
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($RPAREN)) );
 		}
 	|
-	mix_arith_expr
+	arith_expr
 		{
-//			Arith_exprContext ctx =(Arith_exprContext) getContext().getChild(0);
-//	        if($block==null) 
-//	        	$block = new NonLeafBlock();
-			$block.addChild( $mix_arith_expr.block );
+			Arith_exprContext ctx =(Arith_exprContext) getContext().getChild(0);
+	        if($block==null) 
+	        	$block = new NonLeafBlock("arith_expr");
+			$block.addChild( ctx.block );
 		}
-	(
-		arith_binary_op 	mix_arith_expr
-			{
-				$arith_binary_op.block.setSpaceCount(1);
-				$block.addChild( $arith_binary_op.block  );
+	arith_binary_op 	arith_expr
+		{
+			$arith_binary_op.block.setSpaceCount(1);
+			$block.addChild( $arith_binary_op.block  );
 				
-				$mix_arith_expr.block.setSpaceCount(1);
-				$block.addChild( $mix_arith_expr.block );
-			}
-	)+
+			$arith_expr.block.setSpaceCount(1);
+			$block.addChild( _localctx.arith_expr.block );
+		}
 ;
 
 //=========================================关系表达式=================================================

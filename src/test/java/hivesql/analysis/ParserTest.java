@@ -34,8 +34,9 @@ public class ParserTest {
 	@DataProvider(name = "basic_sqls")
 	   public static Object[][] primeNumbers() {
 	      return new Object[][] {
-//	    	  {"/basic_sqls/logic_expr.sql"}, 
-	    	  {"/basic_sqls/simple_logic_expr.sql"}
+	    	  {"/basic_sqls/logic_expr.sql"}
+//	    	  , 
+//	    	  {"/basic_sqls/simple_logic_expr.sql"}
 	      };
 	   }
 	
