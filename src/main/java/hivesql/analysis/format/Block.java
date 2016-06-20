@@ -6,6 +6,16 @@ import org.slf4j.LoggerFactory;
 public abstract class Block {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(Block.class);
 	private int spaceCount;
+	
+	private String name;
+	
+	public Block(String name){
+		this.name=name;
+	}
+	
+	public Block(){
+		
+	}
 
 	public int getSpaceCount() {
 		return spaceCount;
@@ -39,5 +49,13 @@ public abstract class Block {
 			}
 		}
 		return r.toString();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

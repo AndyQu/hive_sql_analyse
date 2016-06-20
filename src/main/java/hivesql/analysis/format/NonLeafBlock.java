@@ -6,8 +6,13 @@ import java.util.List;
 public class NonLeafBlock extends Block {
 	private List<Block> childs;
 
-	public NonLeafBlock(){}
-	
+	public NonLeafBlock() {
+	}
+
+	public NonLeafBlock(String name) {
+		super(name);
+	}
+
 	public NonLeafBlock(List<Block> childs) {
 		this.childs = childs;
 	}
@@ -29,12 +34,12 @@ public class NonLeafBlock extends Block {
 
 	@Override
 	public String show() {
-		if(childs!=null) {
+		if (childs != null) {
 			StringBuilder ret = new StringBuilder();
 			childs.stream().forEach(child -> ret.append(child.show()));
 			return addSpaces(getSpaceCount(), ret.toString());
-		}else{
-			LOGGER.warn("event_name=NonLeafBlock_has_no_child");
+		} else {
+			LOGGER.warn("event_name=NonLeafBlock_has_no_child block_name={}", getName());
 			return "";
 		}
 	}
