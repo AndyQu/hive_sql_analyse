@@ -645,9 +645,11 @@ RPAREN
 |
 	case_clause
 		{ 
-			Map<String, Boolean> ret = existContext(getRuleContext(), new String[]{"where_clause"});
-			
-			if(!ret.containsKey("where_clause")){
+			Map<String, Boolean> ret = existContext(getRuleContext(), new String[]{"func_para"});
+			/**
+			 * where语句中可能存在一个函数调用x(),x的参数是case_clause，这个时候要加一个空行。因此，不能通过判断父context是否存在where_clause来决定；而是根据父context是否存在func_para来决定。
+			 */
+			if(ret.containsKey("func_para")){
 				$block.addChild( LineOnlyBlock.build() );
 			}
 			$case_clause.block.setSpaceCount(Indent_Space_Count);
