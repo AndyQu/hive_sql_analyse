@@ -41,6 +41,10 @@ public class ParserTest {
 	    	  {"/basic_sqls/sub_query_join.sql"}
 	    	  ,
 	    	  {"/basic_sqls/function_over.sql"}
+	    	  ,
+	    	  {"/basic_sqls/sort_distribute.sql"}
+	    	  ,
+	    	  {"/basic_sqls/case.sql"}
 	      };
 	   }
 	
