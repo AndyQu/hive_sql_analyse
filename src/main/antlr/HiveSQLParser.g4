@@ -373,20 +373,7 @@ relation_expr { $block = $relation_expr.block; }
 func_call { $block=$func_call.block; }
 ;
 
-paren_logic_operand returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("paren_logic_operand");}
-: 
-LPAREN logic_operand RPAREN
-	{
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );	
-		
-		$block.addChild( $logic_operand.block );
-		
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );	
-	}
-;
-
-compose_logic_expr returns [NonLeafBlock block]
+basic_logic_expr returns [NonLeafBlock block]
 @init{ $block = new NonLeafBlock("compose_logic_expr");}
 :
 	logic_operand 
@@ -406,7 +393,7 @@ compose_logic_expr returns [NonLeafBlock block]
 			
 			$block.addChild( $logic_operand.block );
 		}
-	)+
+	)
 |
 NOT logic_operand
 	{
@@ -417,33 +404,13 @@ NOT logic_operand
 	}
 ;
 
-paren_compose_logic_expr returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("paren_compose_logic_expr");}
-:
-LPAREN compose_logic_expr RPAREN
-	{
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );	
-		
-		$compose_logic_expr.block.setSpaceCount(Indent_Space_Count);
-		$block.addChild( $compose_logic_expr.block );
-		$block.addChild( LineOnlyBlock.buildOne(0) );
-		
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($RPAREN)) );	
-	}
-;
 logic_component returns [NonLeafBlock block]
 :
 logic_operand
 	{ $block=$logic_operand.block; }
 |
-paren_logic_operand
-	{ $block=$paren_logic_operand.block; }
-|
-compose_logic_expr
-	{ $block=$compose_logic_expr.block; }
-|
-paren_compose_logic_expr
-	{ $block=$paren_compose_logic_expr.block; }
+basic_logic_expr
+	{ $block=$basic_logic_expr.block; }
 ;
 
 /**
@@ -460,11 +427,10 @@ logic_expr returns [NonLeafBlock block]
 		{
 			$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
 			
-			$logic_expr.block.setSpaceCount( Indent_Space_Count );
-			$block.addChild( $logic_expr.block );
-			$block.addChild( LineOnlyBlock.buildOne(0) );
+			_localctx.logic_expr.block.setSpaceCount( Indent_Space_Count );
+			$block.addChild( _localctx.logic_expr.block );
 			
-			$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
 		}
 	|
 	logic_expr
@@ -478,7 +444,7 @@ logic_expr returns [NonLeafBlock block]
 			    
 			Logic_exprContext ctx =(Logic_exprContext) getContext().getChild(0);
 	        if($block==null) 
-	        	$block = new NonLeafBlock();
+	        	$block = new NonLeafBlock("logic_expr");
 			$block.addChild( ctx.block );
 			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
@@ -487,7 +453,7 @@ logic_expr returns [NonLeafBlock block]
 			$block.addChild( $logic_op.block );
 			$block.addChild( LineOnlyBlock.buildOne(0) );
 			
-			$block.addChild( ((Logic_exprContext)_localctx).logic_expr.block );
+			$block.addChild( _localctx.logic_expr.block );
 			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
 	|
@@ -564,7 +530,7 @@ arith_expr returns [NonLeafBlock block]
 			$arith_binary_op.block.setSpaceCount(1);
 			$block.addChild( $arith_binary_op.block  );
 				
-			$arith_expr.block.setSpaceCount(1);
+			_localctx.arith_expr.block.setSpaceCount(1);
 			$block.addChild( _localctx.arith_expr.block );
 		}
 ;
