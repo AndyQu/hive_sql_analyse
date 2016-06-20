@@ -36,4 +36,9 @@ public class LeafBlockWithLine extends Block {
 				);
 		return ret.toString();
 	}
+	
+	@Override
+	public String toString(){
+		return show();
+	}
 }

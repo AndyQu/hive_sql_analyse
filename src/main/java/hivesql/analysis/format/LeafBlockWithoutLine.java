@@ -29,4 +29,9 @@ public class LeafBlockWithoutLine extends Block {
 	public String show() {
 		return String.format("%s%s", buildSpaces(getSpaceCount()), content);
 	}
+	
+	@Override
+	public String toString(){
+		return show();
+	}
 }

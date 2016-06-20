@@ -36,6 +36,7 @@ public class NonLeafBlock extends Block {
 	public String show() {
 		if (childs != null) {
 			StringBuilder ret = new StringBuilder();
+			LOGGER.debug("event_name=showNonLeafBlock block_name={}", getName());
 			childs.stream().forEach(child -> ret.append(child.show()));
 			return addSpaces(getSpaceCount(), ret.toString());
 		} else {
