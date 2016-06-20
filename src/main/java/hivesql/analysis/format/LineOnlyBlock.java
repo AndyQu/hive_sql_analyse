@@ -2,6 +2,8 @@ package hivesql.analysis.format;
 
 public final class LineOnlyBlock extends Block {
 	
+	private static final LineOnlyBlock One_Line = build(0,1);
+	
 	private int lineCount;
 
 	public int getLineCount() {
@@ -21,7 +23,7 @@ public final class LineOnlyBlock extends Block {
 	}
 	
 	public static LineOnlyBlock build(){
-		return build(0,1);
+		return One_Line;
 	}
 	
 	
