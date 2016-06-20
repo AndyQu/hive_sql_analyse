@@ -3,6 +3,8 @@ parser grammar HiveSQLParser;
 @header {
 package hivesql.analysis.parse;
 
+import java.util.*;
+
 import hivesql.analysis.format.*;
 
 import org.slf4j.Logger;
@@ -23,6 +25,19 @@ options
 	public static final int Indent_Space_Count=2;
 	public String getTokenText(Token t) {
 		return getTokenStream().getText(new Interval(t.getTokenIndex(), t.getTokenIndex()));
+	}
+	
+	public Map<String, Boolean> existContext(RuleContext ctx, String[] contexes){
+		Map<String, Boolean> ret = new HashMap<String, Boolean>();
+		Set<String> ctxSet = new HashSet<String>();
+		ctxSet.addAll(Arrays.asList(contexes));
+		while(ctx!=null){
+			if(ctxSet.contains(ruleNames[ctx.getRuleIndex()])){
+				ret.put(ruleNames[ctx.getRuleIndex()], Boolean.TRUE);
+			}
+			ctx = ctx.getParent();
+		}
+		return ret;
 	}
 }
 
@@ -94,11 +109,9 @@ select_clause returns [NonLeafBlock block]
 		}
 	)?
 	(
-		WHERE logic_expr
+		where_clause
 		{
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($WHERE)));
-			$logic_expr.block.setSpaceCount(Indent_Space_Count);
-			$block.addChild($logic_expr.block);
+			$block.addChild( $where_clause.block );
 		}
 	)?
 	(
@@ -133,6 +146,18 @@ select_clause returns [NonLeafBlock block]
 			$block.addChild($sort_clause.block);
 		}
 	)? SEMI_COLON?
+;
+
+where_clause returns [NonLeafBlock block]
+@init
+{ $block = new NonLeafBlock("where_clause"); }
+:
+WHERE logic_expr
+		{
+			$block.addChild(LeafBlockWithLine.build(0, getTokenText($WHERE)));
+			$logic_expr.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild($logic_expr.block);
+		}
 ;
 
 schema_name returns [LeafBlockWithoutLine block]
@@ -619,7 +644,15 @@ RPAREN
 		}
 |
 	case_clause
-		{ $block.addChild( $case_clause.block );}
+		{ 
+			Map<String, Boolean> ret = existContext(getRuleContext(), new String[]{"where_clause"});
+			
+			if(!ret.containsKey("where_clause")){
+				$block.addChild( LineOnlyBlock.build() );
+			}
+			$case_clause.block.setSpaceCount(Indent_Space_Count);
+			$block.addChild( $case_clause.block );
+		}
 ;
 
 
@@ -958,20 +991,22 @@ case_clause returns [NonLeafBlock block]
 { $block = new NonLeafBlock("case_clause"); }
 :
 	CASE
-		{ $block.addChild( LeafBlockWithLine.build(0, getTokenText($CASE)) ); }
+		{ 
+			$block.addChild( LeafBlockWithLine.build(0, getTokenText($CASE)) );
+		}
 	(
 		WHEN
-			{ $block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($WHEN)) ); } 
+			{ $block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenText($WHEN)) ); } 
 		(
 		logic_expr
 			{ 
-				$logic_expr.block.setSpaceCount(Indent_Space_Count);
+				$logic_expr.block.setSpaceCount(Indent_Space_Count*3);
 				$block.addChild($logic_expr.block);
 			}
 			|
 		relation_expr
 			{
-				$relation_expr.block.setSpaceCount(Indent_Space_Count);
+				$relation_expr.block.setSpaceCount(Indent_Space_Count*3);
 				$block.addChild($relation_expr.block);
 			}
 		) THEN top_expr
@@ -979,20 +1014,23 @@ case_clause returns [NonLeafBlock block]
 				$block.addChild( LineOnlyBlock.build() );
 				
 				
-				$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count*2, getTokenText($THEN)) );
+				$block.addChild( LeafBlockWithLine.build(Indent_Space_Count*2, getTokenText($THEN)) );
 				
-				$top_expr.block.setSpaceCount(Indent_Space_Count);
+				$top_expr.block.setSpaceCount(Indent_Space_Count*3);
 				$block.addChild($top_expr.block);
 				$block.addChild( LineOnlyBlock.build() );
 			}
-	)+ ELSE top_expr END
+	)+ ELSE top_expr 
 		{
 			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($ELSE)) );
 			
 			$top_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($top_expr.block);
-			
-			$block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenText($END)) );
+		}
+	END
+		{
+			$block.addChild( LineOnlyBlock.build() );
+			$block.addChild( LeafBlockWithLine.build(0, getTokenText($END)) );
 		}
 ;
 
