@@ -20,6 +20,11 @@ public final class LineOnlyBlock extends Block {
 		return b;
 	}
 	
+	public static LineOnlyBlock build(){
+		return build(0,1);
+	}
+	
+	
 	@Override
 	public String show() {
 		StringBuilder ret = new StringBuilder();
