@@ -32,7 +32,7 @@ public class LeafBlockWithLine extends Block {
 	public String show() {
 		StringBuilder ret = new StringBuilder();
 		lines.stream().forEach(
-				line->ret.append(String.format("%s\n", line))
+				line->ret.append(String.format("%s%s\n", buildSpaces(getSpaceCount()), line))
 				);
 		return ret.toString();
 	}
