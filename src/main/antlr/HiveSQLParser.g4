@@ -373,24 +373,40 @@ relation_expr { $block = $relation_expr.block; }
 func_call { $block=$func_call.block; }
 ;
 
-basic_logic_expr returns [NonLeafBlock block]
-@init{
-	$block = new NonLeafBlock("basic_logic_expr"); 
-}
-:
-logic_operand 
+paren_logic_operand returns [NonLeafBlock block]
+@init{ $block = new NonLeafBlock("paren_logic_operand");}
+: 
+LPAREN logic_operand RPAREN
 	{
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );	
+		
 		$block.addChild( $logic_operand.block );
-		$block.addChild( LineOnlyBlock.buildOne(0) );
+		
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );	
 	}
-logic_op logic_operand
+;
+
+compose_logic_expr returns [NonLeafBlock block]
+@init{ $block = new NonLeafBlock("compose_logic_expr");}
+:
+	logic_operand 
+		{
+
+
+			$block.addChild( $logic_operand.block );
+			
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+		}
+	(
+		logic_op logic_operand
 		{
 			$block.addChild( $logic_op.block );
 			
 			$block.addChild( LineOnlyBlock.buildOne(0) );
 			
 			$block.addChild( $logic_operand.block );
-		} 
+		}
+	)+
 |
 NOT logic_operand
 	{
@@ -401,62 +417,33 @@ NOT logic_operand
 	}
 ;
 
-paren_basic_logic_expr returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("paren_basic_logic_expr");}
+paren_compose_logic_expr returns [NonLeafBlock block]
+@init{ $block = new NonLeafBlock("paren_compose_logic_expr");}
 :
-basic_logic_expr { $block = $basic_logic_expr.block; }
-|
-LPAREN basic_logic_expr RPAREN
+LPAREN compose_logic_expr RPAREN
 	{
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+		$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );	
 		
-		$basic_logic_expr.block.setSpaceCount( Indent_Space_Count );
-		$block.addChild( $basic_logic_expr.block );
-		
+		$compose_logic_expr.block.setSpaceCount(Indent_Space_Count);
+		$block.addChild( $compose_logic_expr.block );
 		$block.addChild( LineOnlyBlock.buildOne(0) );
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($RPAREN)) );
+		
+		$block.addChild( LeafBlockWithLine.build(0, getTokenText($RPAREN)) );	
 	}
 ;
-
-mix_logic_expr returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("mix_logic_expr");}
+logic_component returns [NonLeafBlock block]
 :
-paren_basic_logic_expr { $block = $paren_basic_logic_expr.block; }
+logic_operand
+	{ $block=$logic_operand.block; }
 |
-logic_operand { $block.addChild( $logic_operand.block ); }
-;
-
-tmp_logic_expr returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("tmp_logic_expr");}
-:
-	mix_logic_expr 
-		{
-			/*
-			    加这一句是为了让antlr4生成
-			        ((Top_exprContext)_localctx).top_expr = top_expr(0);
-			    否则, antlr4 只会生成
-			        top_expr(0);
-			*/
-			    
-//			Mix_logic_exprContext ctx =(Mix_logic_exprContext) getContext().getChild(0);
-//	        if($block==null) 
-//	        	$block = new NonLeafBlock();
-//			$block.addChild( ctx.block );
-
-			$block.addChild( $mix_logic_expr.block );
-			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
-		}
-	(
-		logic_op mix_logic_expr
-		{
-			$block.addChild( $logic_op.block );
-			
-			$block.addChild( LineOnlyBlock.buildOne(0) );
-			
-			$block.addChild( $mix_logic_expr.block );
-		}
-	)+
+paren_logic_operand
+	{ $block=$paren_logic_operand.block; }
+|
+compose_logic_expr
+	{ $block=$compose_logic_expr.block; }
+|
+paren_compose_logic_expr
+	{ $block=$paren_compose_logic_expr.block; }
 ;
 
 /**
@@ -466,23 +453,8 @@ logic_expr returns [NonLeafBlock block]
 @init
 { $block = new NonLeafBlock("logic_expr"); }
 :
-	paren_basic_logic_expr
-		{
-			$block = $paren_basic_logic_expr.block;
-		}
-	|
-	tmp_logic_expr
-		{	$block = $tmp_logic_expr.block; }
-	|
-	NOT logic_expr
-		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($NOT)) );
-			
-			$logic_expr.block.setSpaceCount(Indent_Space_Count);
-			$block.addChild( $logic_expr.block );
-		}
-	|
-		
+	logic_component
+		{ $block=$logic_component.block; }
 	|
 	LPAREN logic_expr RPAREN
 		{
@@ -490,8 +462,33 @@ logic_expr returns [NonLeafBlock block]
 			
 			$logic_expr.block.setSpaceCount( Indent_Space_Count );
 			$block.addChild( $logic_expr.block );
+			$block.addChild( LineOnlyBlock.buildOne(0) );
 			
 			$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+		}
+	|
+	logic_expr
+		{
+			/*
+			    加这一句是为了让antlr4生成
+			        ((Top_exprContext)_localctx).top_expr = top_expr(0);
+			    否则, antlr4 只会生成
+			        top_expr(0);
+			*/
+			    
+			Logic_exprContext ctx =(Logic_exprContext) getContext().getChild(0);
+	        if($block==null) 
+	        	$block = new NonLeafBlock();
+			$block.addChild( ctx.block );
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+		}
+	logic_op logic_expr
+		{
+			$block.addChild( $logic_op.block );
+			$block.addChild( LineOnlyBlock.buildOne(0) );
+			
+			$block.addChild( ((Logic_exprContext)_localctx).logic_expr.block );
+			$block.addChild( LineOnlyBlock.buildOne(0) );
 		}
 ;
 

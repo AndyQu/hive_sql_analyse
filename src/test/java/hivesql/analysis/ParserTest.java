@@ -16,6 +16,7 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.google.gson.Gson;
@@ -30,8 +31,16 @@ public class ParserTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParserTest.class);
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	
-	@Test
-	public void testSqlA() {
+	@DataProvider(name = "basic_sqls")
+	   public static Object[][] primeNumbers() {
+	      return new Object[][] {
+//	    	  {"/basic_sqls/logic_expr.sql"}, 
+	    	  {"/basic_sqls/simple_logic_expr.sql"}
+	      };
+	   }
+	
+	@Test(dataProvider = "basic_sqls")
+	public void testSqlA(String sqlFile) {
 //		Gson gson =  new GsonBuilder().setExclusionStrategies(new ExclusionStrategy(){
 //
 //			@Override
@@ -54,11 +63,9 @@ public class ParserTest {
 //		}).create();
 		
 		try {
-			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().
-//					getResourceAsStream("/auto_hmart_finance.cux_busn_data_int_all.mis3.sql")));
-					getResourceAsStream("/basic_sqls/simple_logic_expr.sql")));
+			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().getResourceAsStream(sqlFile)));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
-			parser.addErrorListener(new HiveErrorListener(parser));
+//			parser.addErrorListener(new HiveErrorListener(parser));
 			StatContext statCtx = (StatContext)parser.stat();
 			
 			LOGGER.warn("\n{}", statCtx.block.show());
