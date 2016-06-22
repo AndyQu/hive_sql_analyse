@@ -396,44 +396,10 @@ relation_expr { $block = $relation_expr.block; }
 func_call { $block=$func_call.block; }
 ;
 
-basic_logic_expr returns [NonLeafBlock block]
-@init{ $block = new NonLeafBlock("compose_logic_expr");}
-:
-	logic_operand 
-		{
-
-
-			$block.addChild( $logic_operand.block );
-			
-			$block.addChild( LineOnlyBlock.build() );
-		}
-	(
-		logic_op logic_operand
-		{
-			$block.addChild( $logic_op.block );
-			
-			$block.addChild( LineOnlyBlock.build() );
-			
-			$block.addChild( $logic_operand.block );
-		}
-	)
-|
-NOT logic_operand
-	{
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($NOT)) );
-		
-		$logic_operand.block.setSpaceCount(Indent_Space_Count);
-		$block.addChild( $logic_operand.block );
-	}
-;
-
 logic_component returns [NonLeafBlock block]
 :
 logic_operand
 	{ $block=$logic_operand.block; }
-|
-basic_logic_expr
-	{ $block=$basic_logic_expr.block; }
 ;
 
 /**
@@ -503,27 +469,10 @@ arith_operand returns [Block block]
 		}
 ;
 
-basic_arith_expr returns [NonLeafBlock block]
-@init{$block = new NonLeafBlock("basic_arith_expr");}
-:
-arith_operand 
-	{
-		$block.addChild( $arith_operand.block );
-	}
-arith_binary_op arith_operand
-	{
-		$block.addChild( $arith_binary_op.block );
-		$block.addChild( $arith_operand.block );
-	}
-;
-
 arith_component returns [Block block]
 :
 arith_operand 
 	{ $block = $arith_operand.block; }
-|
-basic_arith_expr
-	{ $block = $basic_arith_expr.block; }
 ;
 
 arith_expr returns [NonLeafBlock block]
