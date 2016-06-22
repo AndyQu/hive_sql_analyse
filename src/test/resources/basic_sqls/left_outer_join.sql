@@ -9,7 +9,7 @@
         count(user_id) as new_user_count,
         dt
     from
-    (    SELECT
+    (    select
             first_poi_id 	as wm_poi_id,
             poi_name		as wm_poi_name,
             poi_level,
@@ -34,20 +34,20 @@
             user_id,
             dt
         
-        FROM
-          (SELECT
+        from
+          (select
               a.*,
               b.level as poi_level
-          FROM 
+          from 
               (
-                SELECT *
-                FROM
+                select *
+                from
                   mart_waimaigrowth.fact_order_as_one 
-                WHERE
+                where
                   dt='$now.datekey'
-                AND
+                and
                    usr_first_order_dt='$now.datekey'
-                AND
+                and
                     order_sorted_id=1
               )as a
           left outer join

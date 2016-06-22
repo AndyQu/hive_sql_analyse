@@ -45,6 +45,18 @@ public class ParserTest {
 	    	  {"/basic_sqls/sort_distribute.sql"}
 	    	  ,
 	    	  {"/basic_sqls/case.sql"}
+	    	  ,
+	    	  {"/basic_sqls/distinct.sql"}
+	    	  ,
+	    	  {"/basic_sqls/if_as_group_by.sql"}
+	    	  ,
+	    	  {"/basic_sqls/simple_arith_expr.sql"}
+	    	  ,
+	    	  {"/basic_sqls/function_in_case.sql"}
+	    	  ,
+	    	  {"/basic_sqls/union_all.sql"}
+	    	  ,
+	    	  {"/basic_sqls/left_outer_join.sql"}
 	      };
 	   }
 	

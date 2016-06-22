@@ -24,6 +24,10 @@ public class LeafBlockWithoutLine extends Block {
 		b.setContent(line);
 		return b;
 	}
+	
+	public static LeafBlockWithoutLine build(int spaceCount){
+		return build(spaceCount, "");
+	}
 
 	@Override
 	public String show() {

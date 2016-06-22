@@ -1,4 +1,4 @@
-SELECT '' imp_batch_number
+select '' imp_batch_number
       ,t.imp_key_number
       ,t.record_name
       ,t.record_company
@@ -61,7 +61,7 @@ SELECT '' imp_batch_number
       ,t.record_date
       ,t.source_system
       ,t.business_type
-  FROM (SELECT imp_key_number
+  from (select imp_key_number
               ,record_name
               ,record_company
               ,'' product_type
@@ -84,9 +84,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,comments
-          FROM ba_finance.cux_mis_new_withdraw
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_new_withdraw
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,'' product_type
@@ -109,9 +109,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,'' comments
-          FROM ba_finance.cux_mis_new_receipt
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_new_receipt
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,product_type
@@ -134,9 +134,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,contract_type
               ,comments
-          FROM ba_finance.cux_mis_new_chasefail
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_new_chasefail
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,product_type
@@ -159,9 +159,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,contract_type
               ,comments
-          FROM ba_finance.cux_mis_new_score
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_new_score
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,'' product_type
@@ -184,9 +184,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,comments
-          FROM ba_finance.cux_mis_dk_ml
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_dk_ml
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,'' product_type
@@ -209,9 +209,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,comments
-          FROM ba_finance.cux_sytyx_yxzf
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_sytyx_yxzf
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,'' product_type
@@ -234,9 +234,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,comments
-          FROM ba_finance.cux_sytyx_yxtk 
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_sytyx_yxtk 
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,product_type
@@ -259,9 +259,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,contract_type
               ,comments
-          FROM ba_finance.cux_mis_merge_consume   
-        UNION ALL
-        SELECT imp_key_number
+          from ba_finance.cux_mis_merge_consume   
+        union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,product_type
@@ -284,9 +284,9 @@ SELECT '' imp_batch_number
               ,event_date
               ,contract_type
               ,comments
-        FROM ba_finance.cux_mis_merge_refund                              
-   UNION ALL
-        SELECT imp_key_number
+        from ba_finance.cux_mis_merge_refund                              
+   union all
+        select imp_key_number
               ,record_name
               ,record_company
               ,product_type
@@ -309,6 +309,6 @@ SELECT '' imp_batch_number
               ,event_date
               ,'' contract_type
               ,comments
-        FROM ba_finance.cux_mis_merge_income) t
- WHERE t.record_date BETWEEN '$now.month_begin_date.datekey' AND '$now.month_end_date.datekey'
+        from ba_finance.cux_mis_merge_income) t
+ where t.record_date between '$now.month_begin_date.datekey' and '$now.month_end_date.datekey'
  distribute by `record_date`,`source_system`, `business_type`

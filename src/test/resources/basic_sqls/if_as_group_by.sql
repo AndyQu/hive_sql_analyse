@@ -20,7 +20,7 @@ select
             from	
                 mart_sr.queue_item
             where
-                time_from >= from_unixtime(unix_timestamp('20160501','yyyyMMdd'),'yyyy-MM-dd HH:mm:ss')
+                time_from >= from_unixtime(unix_timestamp('20160501','yyyymmdd'),'yyyy-mm-dd hh:mm:ss')
           		and
           		(
                   (hour(time_from)>=10 and hour(time_from)<=15)

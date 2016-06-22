@@ -104,19 +104,19 @@ select_clause returns [NonLeafBlock block]
 			Block b1 = $table_references.block;
 			b1.setSpaceCount(Indent_Space_Count);
 			$block.addChild(b1);
-			
-			$block.addChild( LineOnlyBlock.build() );
 		}
 	)?
 	(
 		where_clause
 		{
+			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild( $where_clause.block );
 		}
 	)?
 	(
 		GROUP BY group_by_clause
 		{
+			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($GROUP)+" "+getTokenText($BY)));
 			$group_by_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($group_by_clause.block);
@@ -125,6 +125,7 @@ select_clause returns [NonLeafBlock block]
 	(
 		CLUSTER BY cluster_clause
 		{
+			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($CLUSTER)+" "+getTokenText($BY)));
 			$cluster_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($cluster_clause.block);
@@ -133,6 +134,7 @@ select_clause returns [NonLeafBlock block]
 	(
 		DISTRIBUTE BY distribute_clause
 		{
+			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($DISTRIBUTE)+" "+getTokenText($BY)));
 			$distribute_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($distribute_clause.block);
@@ -141,6 +143,7 @@ select_clause returns [NonLeafBlock block]
 	(
 		SORT BY sort_clause
 		{
+			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(LeafBlockWithLine.build(0, getTokenText($SORT)+" "+getTokenText($BY)));
 			$sort_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($sort_clause.block);
@@ -307,7 +310,6 @@ selected_column returns [NonLeafBlock block]
 				}
 			(function_over_clause
 				{
-					$function_over_clause.block.setSpaceCount(1);
 					$block.addChild($function_over_clause.block);
 				}
 			)?
@@ -938,7 +940,7 @@ function_over_clause returns [NonLeafBlock block]
 	RPAREN
 	{
 		$block.addChild( LineOnlyBlock.build() );
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($RPAREN)) );
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
 	}
 ;
 /**
