@@ -198,7 +198,10 @@ full_column_name returns [NonLeafBlock block]
 :
 	(
 		DISTINCT
-		{$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($DISTINCT)));}
+		{
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($DISTINCT)));
+			$block.addChild(LeafBlockWithoutLine.build(1));
+		}
 
 	)?
 	(
@@ -485,8 +488,12 @@ arith_expr returns [NonLeafBlock block]
 	|
 	LPAREN arith_expr RPAREN
 		{
+			if($arith_expr.block==null){
+				$arith_expr.block = new NonLeafBlock("arith_expr");
+			}
+			
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($LPAREN)) );
-			$block.addChild( $arith_expr.block);
+			$block.addChild( _localctx.arith_expr.block );
 			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($RPAREN)) );
 		}
 	|
