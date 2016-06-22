@@ -36,6 +36,7 @@ public class NonLeafBlock extends Block {
 		blocks.stream().forEach(block->addChild(block));;
 	}
 	
+	@Override
 	public boolean isStartedWithLine(){
 		if(childs==null||childs.size()<0)
 			return false;
@@ -53,19 +54,20 @@ public class NonLeafBlock extends Block {
 		}
 	}
 	
+	@Override
 	public boolean isEndedWithLine(){
 		if(childs==null||childs.size()<0)
 			return false;
-		Block first = childs.get(childs.size()-1);
-		if(first instanceof LineOnlyBlock){
+		Block last = childs.get(childs.size()-1);
+		if(last instanceof LineOnlyBlock){
 			return true;
-		}else if(first instanceof LeafBlockWithoutLine){
+		}else if(last instanceof LeafBlockWithoutLine){
 			return false;
-		}else if(first instanceof NonLeafBlock){
-			return ((NonLeafBlock) first).isEndedWithLine();
+		}else if(last instanceof NonLeafBlock){
+			return ((NonLeafBlock) last).isEndedWithLine();
 		}else{
 			throw new RuntimeException(
-					String.format("event_name=unexpected-Block-Type value=%s", first.getClass().getName())
+					String.format("event_name=unexpected-Block-Type value=%s", last.getClass().getName())
 					);
 		}
 	}

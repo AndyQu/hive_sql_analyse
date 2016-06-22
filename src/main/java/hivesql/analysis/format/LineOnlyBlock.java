@@ -36,5 +36,15 @@ public final class LineOnlyBlock extends Block {
 		}
 		return ret.toString();
 	}
+	
+	@Override
+	public boolean isStartedWithLine() {
+		return true;
+	}
+	
+	@Override
+	public boolean isEndedWithLine() {
+		return true;
+	}
 
 }

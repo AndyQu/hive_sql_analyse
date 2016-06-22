@@ -38,4 +38,14 @@ public class LeafBlockWithoutLine extends Block {
 	public String toString(){
 		return show();
 	}
+
+	@Override
+	public boolean isStartedWithLine() {
+		return false;
+	}
+
+	@Override
+	public boolean isEndedWithLine() {
+		return false;
+	}
 }

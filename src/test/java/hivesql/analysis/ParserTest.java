@@ -1,5 +1,6 @@
 package hivesql.analysis;
 
+import hivesql.analysis.format.BlockTool;
 import hivesql.analysis.node.MyAstNode;
 import hivesql.analysis.parse.HiveSQLLexer;
 import hivesql.analysis.parse.HiveSQLParser;
@@ -90,6 +91,8 @@ public class ParserTest {
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
 			parser.addErrorListener(new HiveErrorListener(parser));
 			StatContext statCtx = (StatContext)parser.stat();
+			
+			BlockTool.cutOutRedundantLines(statCtx.block);
 			
 			LOGGER.warn("\n{}", statCtx.block.show());
 			

@@ -59,6 +59,9 @@ public abstract class Block {
 		this.name = name;
 	}
 	
+	public abstract boolean isStartedWithLine();
+	public abstract boolean isEndedWithLine();
+	
 	@Override
 	public String toString(){
 		return getName();
