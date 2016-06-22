@@ -91,7 +91,7 @@ stat returns [NonLeafBlock block]
 
 		)?
 		{ 
-			$block.addChild( LineOnlyBlock.build(0,2) );
+			$block.addChild( LineOnlyBlock.build(0,1) );
 		}
 
 		select_clause
@@ -114,6 +114,8 @@ select_clause returns [NonLeafBlock block]
 	SELECT selected_column_list
 		{ 
 			$block.addChild(buildFromToken(0, ($SELECT)));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$selected_column_list.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($selected_column_list.block);
 			
@@ -123,6 +125,7 @@ select_clause returns [NonLeafBlock block]
 		FROM table_references
 		{
 			$block.addChild(buildFromToken(0, ($FROM)));
+			$block.addChild( LineOnlyBlock.build() );
 			
 			Block b1 = $table_references.block;
 			b1.setSpaceCount(Indent_Space_Count);
@@ -142,6 +145,8 @@ select_clause returns [NonLeafBlock block]
 			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(buildFromToken(0, $GROUP));
 			$block.addChild(buildFromToken(1, $BY));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$group_by_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($group_by_clause.block);
 		}
@@ -151,7 +156,9 @@ select_clause returns [NonLeafBlock block]
 		{
 			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(buildFromToken(0, $CLUSTER));
-			$block.addChild(buildFromToken(0, $BY));
+			$block.addChild(buildFromToken(1, $BY));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$cluster_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($cluster_clause.block);
 		}
@@ -160,8 +167,11 @@ select_clause returns [NonLeafBlock block]
 		DISTRIBUTE BY distribute_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
+			
 			$block.addChild(buildFromToken(0, $DISTRIBUTE));
-			$block.addChild(buildFromToken(0, $BY));
+			$block.addChild(buildFromToken(1, $BY));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$distribute_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($distribute_clause.block);
 		}
@@ -171,7 +181,9 @@ select_clause returns [NonLeafBlock block]
 		{
 			$block.addChild( LineOnlyBlock.build() );
 			$block.addChild(buildFromToken(0, $SORT));
-			$block.addChild(buildFromToken(0, $BY));
+			$block.addChild(buildFromToken(1, $BY));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$sort_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($sort_clause.block);
 		}
@@ -185,6 +197,8 @@ where_clause returns [NonLeafBlock block]
 WHERE logic_expr
 		{
 			$block.addChild(buildFromToken(0, ($WHERE)));
+			$block.addChild( LineOnlyBlock.build() );
+			
 			$logic_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($logic_expr.block);
 		}
@@ -260,24 +274,33 @@ simple_column_name returns [Block block]
 	{	$block=buildFromToken(0,($ASTERISK));}
 
 	| BACK_QUOTE ID BACK_QUOTE
-	{	$block=LeafBlockWithoutLine.build(
-			0, 
-			String.format("%s%s%s", 
-				($BACK_QUOTE), 
-				($ID), 
-				($BACK_QUOTE)
-			) 
-		);
+		{	
+			$block=new NonLeafBlock("simple_column_name");
+			((NonLeafBlock)$block).addChild( 
+				LeafBlockWithoutLine.build(
+					0, 
+					String.format("%s%s", 
+						getTokenText($BACK_QUOTE), 
+						getTokenText($ID) 
+					)
+				)
+			);
+			((NonLeafBlock)$block).addChild( buildFromToken(0, $BACK_QUOTE) );
 		}
 
 	| BACK_QUOTE ASTERISK BACK_QUOTE
-	{	$block=LeafBlockWithoutLine.build(0, 
-				String.format("%s%s%s", 
-					($BACK_QUOTE), 
-					($ASTERISK), 
-					($BACK_QUOTE)
+		{	
+			$block=new NonLeafBlock("simple_column_name");
+			((NonLeafBlock)$block).addChild( 
+				LeafBlockWithoutLine.build(
+					0, 
+					String.format("%s%s", 
+						getTokenText($BACK_QUOTE), 
+						getTokenText($ASTERISK) 
+					)
 				)
 			);
+			((NonLeafBlock)$block).addChild( buildFromToken(0, $BACK_QUOTE) );
 		}
 
 ;
@@ -366,6 +389,7 @@ selected_column
 				$block.addChild(
 					buildFromToken(0, ($COMMA))
 				);
+				$block.addChild( LineOnlyBlock.build() );
 				$block.addChild($selected_column.block);
 			}
 )*
@@ -384,6 +408,8 @@ column_name_list returns [NonLeafBlock block]
 		COMMA full_column_name
 			{	
 				$block.addChild(buildFromToken(0, ($COMMA)));
+				$block.addChild( LineOnlyBlock.build() );
+				
 				$block.addChild( $full_column_name.block);
 			}
 	)*
@@ -394,13 +420,7 @@ column_name_list returns [NonLeafBlock block]
 ;
 
 
-group_by_clause returns [NonLeafBlock block]
-:
-	column_name_list
-	{
-		$block = $column_name_list.block;
-	}
-;
+
 
 
 
@@ -932,6 +952,7 @@ subquery returns [NonLeafBlock block]
 	LPAREN stat RPAREN
 	{
 		$block.addChild( buildFromToken(0, ($LPAREN)) );
+		$block.addChild( LineOnlyBlock.build() );
 		
 		$stat.block.setSpaceCount(Indent_Space_Count);
 		$block.addChild( $stat.block );
@@ -954,9 +975,11 @@ function_over_clause returns [NonLeafBlock block]
 		{
 			$block.addChild( buildFromToken(0,($OVER)) );
 			$block.addChild( buildFromToken(1, ($LPAREN)) );
+			$block.addChild( LineOnlyBlock.build()  );
 			
 			$block.addChild( buildFromToken(Indent_Space_Count, ($PARTITION)) );
 			$block.addChild( buildFromToken(1, ($BY)) );
+			$block.addChild( LineOnlyBlock.build()  );
 			
 			$column_name_list.block.setSpaceCount(Indent_Space_Count*2);
 			$block.addChild( $column_name_list.block );
@@ -1043,12 +1066,25 @@ ORDER BY ordered_column_name_list
 
 cluster_clause returns [NonLeafBlock block]
 :
-	column_name_list { $block= $column_name_list.block; }
+	column_name_list 
+	{ 
+		$block = $column_name_list.block;
+	}
 ;
 
 distribute_clause returns [NonLeafBlock block]
 :
-	column_name_list { $block= $column_name_list.block; }
+	column_name_list 
+	{
+		$block = $column_name_list.block;
+	}
+;
+group_by_clause returns [NonLeafBlock block]
+:
+	column_name_list
+	{
+		$block = $column_name_list.block;
+	}
 ;
 
 sort_clause returns [NonLeafBlock block]
@@ -1081,6 +1117,7 @@ ordered_column_name_list returns [NonLeafBlock block]
 					$block.addChild(
 						buildFromToken(0, ($COMMA))
 					); 
+					$block.addChild( LineOnlyBlock.build() );
 					$block.addChild($full_column_name.block);
 				}
 			(
