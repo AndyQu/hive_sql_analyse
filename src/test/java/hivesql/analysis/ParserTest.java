@@ -57,6 +57,8 @@ public class ParserTest {
 	    	  {"/basic_sqls/union_all.sql"}
 	    	  ,
 	    	  {"/basic_sqls/left_outer_join.sql"}
+	    	  ,
+	    	  {"/basic_sqls/comment.sql"}
 	      };
 	   }
 	

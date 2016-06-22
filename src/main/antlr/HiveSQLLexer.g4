@@ -2,6 +2,11 @@ lexer grammar HiveSQLLexer;
 @ header { 
 	package hivesql.analysis.parse;
  }
+@members {
+    public static final int Channel_Comment = 1;
+    public static final int Channel_Other = 2;
+}
+
 
 
 SELECT
@@ -412,15 +417,15 @@ DOUBLE
    ;
    
 COMMENT
-	:'--' (~[\r\n])* -> skip
+	:'--' (~[\r\n])* -> channel(Channel_Comment)
 	;
 
 NEWLINE
-   : '\r'? '\n' -> skip
+   : '\r'? '\n' -> channel(Channel_Other)
    ;
 
 WS
-   : ( ' ' | '\t' | '\n' | '\r' )+ -> skip
+   : ( ' ' | '\t' | '\n' | '\r' )+ -> channel(3)
    ;
 
 /**

@@ -24,8 +24,27 @@ options
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	public static final int Indent_Space_Count=2;
 	public String getTokenText(Token t) {
+		
 		return getTokenStream().getText(new Interval(t.getTokenIndex(), t.getTokenIndex()));
 	}
+	
+	public String getComment(Token t){
+			BufferedTokenStream ts = (BufferedTokenStream)getTokenStream();
+			List<Token> tl = ts.getHiddenTokensToRight(t.getTokenIndex(), HiveSQLLexer.Channel_Comment);
+			if(tl!=null && tl.size()>0){
+				return getTokenText(tl.get(0));
+			}else{
+				return null;
+			}
+		}
+	public String getTokenTextAndComment(Token t){
+			String comment=getComment(t);
+			if(comment!=null && !comment.equals("")){
+				return getTokenText(t)+" "+getComment(t)+"\n";
+			}else{
+				return getTokenText(t);
+			}
+		}
 	
 	public Map<String, Boolean> existContext(RuleContext ctx, String[] contexes){
 		Map<String, Boolean> ret = new HashMap<String, Boolean>();
@@ -56,15 +75,15 @@ stat returns [NonLeafBlock block]
 		{ 
 			hasUnion=true;
 			$block.addChild( LineOnlyBlock.build());
-			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($UNION)));
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenTextAndComment($UNION)));
 		}
 
 		(
 			ALL
-			{ $block.addChild(LeafBlockWithoutLine.build(1, getTokenText($ALL))); }
+			{ $block.addChild(LeafBlockWithoutLine.build(1, getTokenTextAndComment($ALL))); }
 
 			| DISTINCT
-			{ $block.addChild(LeafBlockWithoutLine.build(1, getTokenText($DISTINCT))); }
+			{ $block.addChild(LeafBlockWithoutLine.build(1, getTokenTextAndComment($DISTINCT))); }
 
 		)?
 		{ 
@@ -90,7 +109,7 @@ select_clause returns [NonLeafBlock block]
 :
 	SELECT selected_column_list
 		{ 
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($SELECT)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($SELECT)));
 			$selected_column_list.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($selected_column_list.block);
 			
@@ -99,7 +118,7 @@ select_clause returns [NonLeafBlock block]
 	(
 		FROM table_references
 		{
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($FROM)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($FROM)));
 			
 			Block b1 = $table_references.block;
 			b1.setSpaceCount(Indent_Space_Count);
@@ -117,7 +136,7 @@ select_clause returns [NonLeafBlock block]
 		GROUP BY group_by_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($GROUP)+" "+getTokenText($BY)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($GROUP)+" "+getTokenTextAndComment($BY)));
 			$group_by_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($group_by_clause.block);
 		}
@@ -126,7 +145,7 @@ select_clause returns [NonLeafBlock block]
 		CLUSTER BY cluster_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($CLUSTER)+" "+getTokenText($BY)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($CLUSTER)+" "+getTokenTextAndComment($BY)));
 			$cluster_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($cluster_clause.block);
 		}
@@ -135,7 +154,7 @@ select_clause returns [NonLeafBlock block]
 		DISTRIBUTE BY distribute_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($DISTRIBUTE)+" "+getTokenText($BY)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($DISTRIBUTE)+" "+getTokenTextAndComment($BY)));
 			$distribute_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($distribute_clause.block);
 		}
@@ -144,7 +163,7 @@ select_clause returns [NonLeafBlock block]
 		SORT BY sort_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($SORT)+" "+getTokenText($BY)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($SORT)+" "+getTokenTextAndComment($BY)));
 			$sort_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($sort_clause.block);
 		}
@@ -157,7 +176,7 @@ where_clause returns [NonLeafBlock block]
 :
 WHERE logic_expr
 		{
-			$block.addChild(LeafBlockWithLine.build(0, getTokenText($WHERE)));
+			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($WHERE)));
 			$logic_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($logic_expr.block);
 		}
@@ -167,7 +186,7 @@ schema_name returns [LeafBlockWithoutLine block]
 :
 	ID
 	{
-   	$block = LeafBlockWithoutLine.build(0, getTokenText($ID));
+   	$block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($ID));
    }
 
 ;
@@ -180,12 +199,12 @@ table_name returns [NonLeafBlock block]
 		schema_name DOT
 		{
    		$block.addChild($schema_name.block);
-   		$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($DOT)));
+   		$block.addChild(LeafBlockWithoutLine.build(0, getTokenTextAndComment($DOT)));
    	}
 
 	)? ID
 	{
-   		$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($ID)));
+   		$block.addChild(LeafBlockWithoutLine.build(0, getTokenTextAndComment($ID)));
    }
 
 ;
@@ -202,7 +221,7 @@ full_column_name returns [NonLeafBlock block]
 	(
 		DISTINCT
 		{
-			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($DISTINCT)));
+			$block.addChild(LeafBlockWithoutLine.build(0, getTokenTextAndComment($DISTINCT)));
 			$block.addChild(LeafBlockWithoutLine.build(1));
 		}
 
@@ -211,7 +230,7 @@ full_column_name returns [NonLeafBlock block]
 		table_name DOT
 		{
    			$block.addChild($table_name.block);
-   			$block.addChild(LeafBlockWithoutLine.build(0, getTokenText($DOT)));
+   			$block.addChild(LeafBlockWithoutLine.build(0, getTokenTextAndComment($DOT)));
    		}
 
 	)? simple_column_name
@@ -225,20 +244,20 @@ simple_column_name returns [LeafBlockWithoutLine block]
 :
 	ID
 	{	
-		//LOGGER.info("event_name=simple_column_name value={}", getTokenText($ID) );
-		$block=LeafBlockWithoutLine.build(0, getTokenText($ID));
+		//LOGGER.info("event_name=simple_column_name value={}", getTokenTextAndComment($ID) );
+		$block=LeafBlockWithoutLine.build(0, getTokenTextAndComment($ID));
 	}
 
 	| ASTERISK
-	{	$block=LeafBlockWithoutLine.build(0, getTokenText($ASTERISK));}
+	{	$block=LeafBlockWithoutLine.build(0, getTokenTextAndComment($ASTERISK));}
 
 	| BACK_QUOTE ID BACK_QUOTE
 	{	$block=LeafBlockWithoutLine.build(
 			0, 
 			String.format("%s%s%s", 
-				getTokenText($BACK_QUOTE), 
-				getTokenText($ID), 
-				getTokenText($BACK_QUOTE)
+				getTokenTextAndComment($BACK_QUOTE), 
+				getTokenTextAndComment($ID), 
+				getTokenTextAndComment($BACK_QUOTE)
 			) 
 		);
 		}
@@ -246,9 +265,9 @@ simple_column_name returns [LeafBlockWithoutLine block]
 	| BACK_QUOTE ASTERISK BACK_QUOTE
 	{	$block=LeafBlockWithoutLine.build(0, 
 				String.format("%s%s%s", 
-					getTokenText($BACK_QUOTE), 
-					getTokenText($ASTERISK), 
-					getTokenText($BACK_QUOTE)
+					getTokenTextAndComment($BACK_QUOTE), 
+					getTokenTextAndComment($ASTERISK), 
+					getTokenTextAndComment($BACK_QUOTE)
 				)
 			);
 		}
@@ -282,9 +301,9 @@ common_alias returns [LeafBlockWithoutLine block]
 	{
    		$block = LeafBlockWithoutLine.build(0, "");
    		try{
-   			$block.addContent(getTokenText($AS)+" ");
+   			$block.addContent(getTokenTextAndComment($AS)+" ");
    		}catch(Exception e){}
-   		$block.addContent(getTokenText($ID));
+   		$block.addContent(getTokenTextAndComment($ID));
    }
 
 ;
@@ -337,7 +356,7 @@ selected_column
 	COMMA selected_column
 			{
 				$block.addChild(
-					LeafBlockWithLine.build(0, getTokenText($COMMA))
+					LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA))
 				);
 				$block.addChild($selected_column.block);
 			}
@@ -356,7 +375,7 @@ column_name_list returns [NonLeafBlock block]
 	(
 		COMMA full_column_name
 			{	
-				$block.addChild(LeafBlockWithLine.build(0, getTokenText($COMMA)));
+				$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA)));
 				$block.addChild( $full_column_name.block);
 			}
 	)*
@@ -385,11 +404,11 @@ element_operand returns [Block block]
 			//LOGGER.info("event_name=non_arith_expr value={}", gson.toJson($block) );
 		}
 	| DOUBLE
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($DOUBLE)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($DOUBLE)); }
 	| INT
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($INT)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($INT)); }
 	| STRING
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($STRING)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($STRING)); }
 ;
 
 //======================================逻辑表达式==========================================
@@ -419,12 +438,12 @@ logic_expr returns [NonLeafBlock block]
 	|
 	LPAREN logic_expr RPAREN
 		{
-			$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($LPAREN)) );
 			
 			_localctx.logic_expr.block.setSpaceCount( Indent_Space_Count );
 			$block.addChild( _localctx.logic_expr.block );
 			
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($RPAREN)) );
 		}
 	|
 	logic_expr
@@ -453,7 +472,7 @@ logic_expr returns [NonLeafBlock block]
 	|
 	NOT logic_expr
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($NOT)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($NOT)) );
 			
 			$logic_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild( ((Logic_exprContext)_localctx).logic_expr.block );
@@ -494,9 +513,9 @@ arith_expr returns [NonLeafBlock block]
 				$arith_expr.block = new NonLeafBlock("arith_expr");
 			}
 			
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($LPAREN)) );
 			$block.addChild( _localctx.arith_expr.block );
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($RPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($RPAREN)) );
 		}
 	|
 	arith_expr
@@ -557,14 +576,14 @@ relation_operand
         }
 	BETWEEN relation_operand
 		{
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($BETWEEN)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($BETWEEN)) );
 			
 			$relation_operand.block.setSpaceCount(1);
 			$block.addChild($relation_operand.block);
 		}
 	AND relation_operand
 		{
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($AND)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($AND)) );
 			
 			$relation_operand.block.setSpaceCount(1);
 			$block.addChild($relation_operand.block);
@@ -577,7 +596,7 @@ relation_operand is_or_is_not NULL
 			$is_or_is_not.block.setSpaceCount(1);
 			$block.addChild($is_or_is_not.block);
 			
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($NULL)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($NULL)) );
 		}
 ;
 
@@ -589,7 +608,7 @@ func_call returns [NonLeafBlock block]
 func_name LPAREN 
 		{
 			$block.addChild($func_name.block);
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($LPAREN)) );
 		}
 (func_para_list
 		{
@@ -598,7 +617,7 @@ func_name LPAREN
 )? 
 RPAREN
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($RPAREN)) );
 		}
 |
 	case_clause
@@ -619,7 +638,7 @@ RPAREN
 
 func_name returns [LeafBlockWithoutLine block]
 :
-	ID { $block = LeafBlockWithoutLine.build(0, getTokenText($ID)); }
+	ID { $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($ID)); }
 ;
 
 //函数参数可以是任意表达式：关系表达式、逻辑表达式、算术表达式、函数调用
@@ -639,7 +658,7 @@ func_para_list returns [NonLeafBlock block]
 	(
 		COMMA func_para
 			{
-				$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($COMMA)) ) ;
+				$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($COMMA)) ) ;
 				$func_para.block.setSpaceCount(1);
 				$block.addChild( $func_para.block );
 			}
@@ -669,35 +688,35 @@ element_operand { $block.addChild( $element_operand.block ); }
 arith_binary_op returns [LeafBlockWithoutLine block]
 :
 	POWER_OP
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($POWER_OP)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($POWER_OP)); }
 	| DIVIDE
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($DIVIDE)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($DIVIDE)); }
 	| MOD
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($MOD)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($MOD)); }
 	| ASTERISK
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($ASTERISK)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($ASTERISK)); }
 	| PLUS
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($PLUS)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($PLUS)); }
 	| MINUS
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($MINUS)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($MINUS)); }
 ;
 
 relational_op returns [LeafBlockWithoutLine block]
 :
 	DOUBLE_EQ
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($DOUBLE_EQ)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($DOUBLE_EQ)); }
 	| EQ
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($EQ)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($EQ)); }
 	| LTH
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($LTH)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($LTH)); }
 	| GTH
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($GTH)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($GTH)); }
 	| NOT_EQ
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($NOT_EQ)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($NOT_EQ)); }
 	| LET
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($LET)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($LET)); }
 	| GET
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($GET)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($GET)); }
 ;
 
 
@@ -705,18 +724,18 @@ relational_op returns [LeafBlockWithoutLine block]
 logic_op returns [LeafBlockWithoutLine block]
 :
 	AND
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($AND)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($AND)); }
 	| 
 	OR
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($OR)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($OR)); }
 ;
 
 is_or_is_not returns [LeafBlockWithoutLine block]
 :
 	IS
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($IS)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($IS)); }
 	| IS NOT
-		{ $block = LeafBlockWithoutLine.build(0, getTokenText($IS)+" "+getTokenText($NOT)); }
+		{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($IS)+" "+getTokenTextAndComment($NOT)); }
 ;
 
 //=========================================表达式 结束=================================================
@@ -731,7 +750,7 @@ table_references returns [NonLeafBlock block]
 		(
 			COMMA table_atom
 				{
-					$block.addChild( LeafBlockWithLine.build(0, getTokenText($COMMA)) );
+					$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA)) );
 					$block.addChild( $table_atom.block );
 				}
 		)
@@ -785,19 +804,19 @@ join_clause returns [NonLeafBlock block]
 	(
 		(
 			LEFT
-				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenText($LEFT)) ); }
+				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($LEFT)) ); }
 			| RIGHT
-				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RIGHT)) ); }
+				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($RIGHT)) ); }
 			| FULL
-				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenText($FULL)) ); }
+				{ $block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($FULL)) ); }
 		)
 		(
 			OUTER
-				{ $block.addChild( LeafBlockWithoutLine.build(1, getTokenText($OUTER)) ); }
+				{ $block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($OUTER)) ); }
 		)?
 	)? JOIN table_atom
 			{
-				$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($JOIN)) );
+				$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($JOIN)) );
 
 				$block.addChild( LineOnlyBlock.build() );				
 //				$table_atom.block.setSpaceCount(1);
@@ -813,8 +832,8 @@ join_clause returns [NonLeafBlock block]
 	)?
 	| CROSS JOIN table_atom
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($CROSS)) );
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($JOIN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($CROSS)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($JOIN)) );
 			
 			$table_atom.block.setSpaceCount(1);
 			$block.addChild( $table_atom.block); 
@@ -835,20 +854,20 @@ join_condition returns [NonLeafBlock block]
 :
 	ON top_expr
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($ON)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($ON)) );
 			$top_expr.block.setSpaceCount(1);
 			$block.addChild($top_expr.block);
 		}
 	| 
 	USING LPAREN column_name_list RPAREN
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($USING)) );
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($USING)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($LPAREN)) );
 			
 			$column_name_list.block.setSpaceCount(1);
 			$block.addChild($column_name_list.block);
 			
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($RPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($RPAREN)) );
 		}
 ;
 
@@ -858,13 +877,13 @@ partition_clause returns [NonLeafBlock block]
 :
 	PARTITION LPAREN partition_names RPAREN
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($PARTITION)) );
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($PARTITION)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($LPAREN)) );
 			
 			$partition_names.block.setSpaceCount(1);
 			$block.addChild( $partition_names.block );
 			
-			$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($RPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($RPAREN)) );
 		}
 ;
 
@@ -879,7 +898,7 @@ partition_names returns [NonLeafBlock block]
 	(
 		COMMA partition_name
 			{
-				$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($COMMA)) );		
+				$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($COMMA)) );		
 				$partition_name.block.setSpaceCount(1);
 				$block.addChild( $partition_name.block );		
 			}
@@ -889,7 +908,7 @@ partition_names returns [NonLeafBlock block]
 partition_name returns [LeafBlockWithoutLine block]
 :
 	ID
-	{ $block = LeafBlockWithoutLine.build(0, getTokenText($ID));  }
+	{ $block = LeafBlockWithoutLine.build(0, getTokenTextAndComment($ID));  }
 
 ;
 
@@ -900,13 +919,13 @@ subquery returns [NonLeafBlock block]
 :
 	LPAREN stat RPAREN
 	{
-		$block.addChild( LeafBlockWithLine.build(0, getTokenText($LPAREN)) );
+		$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($LPAREN)) );
 		
 		$stat.block.setSpaceCount(Indent_Space_Count);
 		$block.addChild( $stat.block );
 		$block.addChild( LineOnlyBlock.build() );
 		
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($RPAREN)) );
 	}
 ;
 
@@ -921,11 +940,11 @@ function_over_clause returns [NonLeafBlock block]
 :
 	OVER LPAREN PARTITION BY column_name_list
 		{
-			$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($OVER)) );
-			$block.addChild( LeafBlockWithLine.build(1, getTokenText($LPAREN)) );
+			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($OVER)) );
+			$block.addChild( LeafBlockWithLine.build(1, getTokenTextAndComment($LPAREN)) );
 			
-			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($PARTITION)) );
-			$block.addChild( LeafBlockWithLine.build(1, getTokenText($BY)) );
+			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenTextAndComment($PARTITION)) );
+			$block.addChild( LeafBlockWithLine.build(1, getTokenTextAndComment($BY)) );
 			
 			$column_name_list.block.setSpaceCount(Indent_Space_Count*2);
 			$block.addChild( $column_name_list.block );
@@ -940,7 +959,7 @@ function_over_clause returns [NonLeafBlock block]
 	RPAREN
 	{
 		$block.addChild( LineOnlyBlock.build() );
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($RPAREN)) );
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($RPAREN)) );
 	}
 ;
 /**
@@ -952,11 +971,11 @@ case_clause returns [NonLeafBlock block]
 :
 	CASE
 		{ 
-			$block.addChild( LeafBlockWithLine.build(0, getTokenText($CASE)) );
+			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($CASE)) );
 		}
 	(
 		WHEN
-			{ $block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenText($WHEN)) ); } 
+			{ $block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenTextAndComment($WHEN)) ); } 
 		(
 		logic_expr
 			{ 
@@ -974,7 +993,7 @@ case_clause returns [NonLeafBlock block]
 				$block.addChild( LineOnlyBlock.build() );
 				
 				
-				$block.addChild( LeafBlockWithLine.build(Indent_Space_Count*2, getTokenText($THEN)) );
+				$block.addChild( LeafBlockWithLine.build(Indent_Space_Count*2, getTokenTextAndComment($THEN)) );
 				
 				$top_expr.block.setSpaceCount(Indent_Space_Count*3);
 				$block.addChild($top_expr.block);
@@ -982,7 +1001,7 @@ case_clause returns [NonLeafBlock block]
 			}
 	)+ ELSE top_expr 
 		{
-			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenText($ELSE)) );
+			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenTextAndComment($ELSE)) );
 			
 			$top_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($top_expr.block);
@@ -990,7 +1009,7 @@ case_clause returns [NonLeafBlock block]
 	END
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild( LeafBlockWithLine.build(0, getTokenText($END)) );
+			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($END)) );
 		}
 ;
 
@@ -1000,8 +1019,8 @@ order_clause returns [NonLeafBlock block]
 :
 ORDER BY ordered_column_name_list 
 	{ 
-		$block.addChild( LeafBlockWithoutLine.build(0, getTokenText($ORDER)) );
-		$block.addChild( LeafBlockWithoutLine.build(1, getTokenText($BY)) );
+		$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($ORDER)) );
+		$block.addChild( LeafBlockWithoutLine.build(1, getTokenTextAndComment($BY)) );
 		
 		$block.addChild( LineOnlyBlock.build() );
 		
@@ -1033,13 +1052,13 @@ ordered_column_name_list returns [NonLeafBlock block]
 	(
 		DESC
 			{ $block.addChild(
-					LeafBlockWithoutLine.build(1, getTokenText($DESC))
+					LeafBlockWithoutLine.build(1, getTokenTextAndComment($DESC))
 				); 
 			}
 		| 
 		ASC
 			{ $block.addChild(
-					LeafBlockWithoutLine.build(1, getTokenText($ASC))
+					LeafBlockWithoutLine.build(1, getTokenTextAndComment($ASC))
 				); 
 			}
 	)?
@@ -1048,7 +1067,7 @@ ordered_column_name_list returns [NonLeafBlock block]
 			COMMA full_column_name
 				{
 					$block.addChild(
-						LeafBlockWithLine.build(0, getTokenText($COMMA))
+						LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA))
 					); 
 					$block.addChild($full_column_name.block);
 				}
@@ -1056,14 +1075,14 @@ ordered_column_name_list returns [NonLeafBlock block]
 				DESC
 					{
 						$block.addChild(
-							LeafBlockWithoutLine.build(1, getTokenText($DESC))
+							LeafBlockWithoutLine.build(1, getTokenTextAndComment($DESC))
 						);
 					} 
 				| 
 				ASC
 					{ 
 						$block.addChild(
-							LeafBlockWithoutLine.build(1, getTokenText($ASC))
+							LeafBlockWithoutLine.build(1, getTokenTextAndComment($ASC))
 						); 
 					}
 			)?
