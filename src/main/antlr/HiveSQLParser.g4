@@ -109,7 +109,7 @@ select_clause returns [NonLeafBlock block]
 :
 	SELECT selected_column_list
 		{ 
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($SELECT)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($SELECT)));
 			$selected_column_list.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($selected_column_list.block);
 			
@@ -118,7 +118,7 @@ select_clause returns [NonLeafBlock block]
 	(
 		FROM table_references
 		{
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($FROM)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($FROM)));
 			
 			Block b1 = $table_references.block;
 			b1.setSpaceCount(Indent_Space_Count);
@@ -136,7 +136,7 @@ select_clause returns [NonLeafBlock block]
 		GROUP BY group_by_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($GROUP)+" "+getTokenTextAndComment($BY)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($GROUP)+" "+getTokenTextAndComment($BY)));
 			$group_by_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($group_by_clause.block);
 		}
@@ -145,7 +145,7 @@ select_clause returns [NonLeafBlock block]
 		CLUSTER BY cluster_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($CLUSTER)+" "+getTokenTextAndComment($BY)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($CLUSTER)+" "+getTokenTextAndComment($BY)));
 			$cluster_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($cluster_clause.block);
 		}
@@ -154,7 +154,7 @@ select_clause returns [NonLeafBlock block]
 		DISTRIBUTE BY distribute_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($DISTRIBUTE)+" "+getTokenTextAndComment($BY)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($DISTRIBUTE)+" "+getTokenTextAndComment($BY)));
 			$distribute_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($distribute_clause.block);
 		}
@@ -163,7 +163,7 @@ select_clause returns [NonLeafBlock block]
 		SORT BY sort_clause
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($SORT)+" "+getTokenTextAndComment($BY)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($SORT)+" "+getTokenTextAndComment($BY)));
 			$sort_clause.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($sort_clause.block);
 		}
@@ -176,7 +176,7 @@ where_clause returns [NonLeafBlock block]
 :
 WHERE logic_expr
 		{
-			$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($WHERE)));
+			$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($WHERE)));
 			$logic_expr.block.setSpaceCount(Indent_Space_Count);
 			$block.addChild($logic_expr.block);
 		}
@@ -356,7 +356,7 @@ selected_column
 	COMMA selected_column
 			{
 				$block.addChild(
-					LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA))
+					BlockTool.buildLine(0, getTokenTextAndComment($COMMA))
 				);
 				$block.addChild($selected_column.block);
 			}
@@ -375,12 +375,12 @@ column_name_list returns [NonLeafBlock block]
 	(
 		COMMA full_column_name
 			{	
-				$block.addChild(LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA)));
+				$block.addChild(BlockTool.buildLine(0, getTokenTextAndComment($COMMA)));
 				$block.addChild( $full_column_name.block);
 			}
 	)*
 	{
-   		$block.addChild(LeafBlockWithLine.build(0,""));
+   		$block.addChild(BlockTool.buildLine(0,""));
    }
 
 ;
@@ -438,7 +438,7 @@ logic_expr returns [NonLeafBlock block]
 	|
 	LPAREN logic_expr RPAREN
 		{
-			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($LPAREN)) );
+			$block.addChild( BlockTool.buildLine(0, getTokenTextAndComment($LPAREN)) );
 			
 			_localctx.logic_expr.block.setSpaceCount( Indent_Space_Count );
 			$block.addChild( _localctx.logic_expr.block );
@@ -750,14 +750,14 @@ table_references returns [NonLeafBlock block]
 		(
 			COMMA table_atom
 				{
-					$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA)) );
+					$block.addChild( BlockTool.buildLine(0, getTokenTextAndComment($COMMA)) );
 					$block.addChild( $table_atom.block );
 				}
 		)
 		| 
 		join_clause
 			{
-				$block.addChild( LeafBlockWithLine.build(0, "" ));
+				$block.addChild( BlockTool.buildLine(0, "" ));
 				$block.addChild( $join_clause.block );
 			}
 	)*
@@ -919,7 +919,7 @@ subquery returns [NonLeafBlock block]
 :
 	LPAREN stat RPAREN
 	{
-		$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($LPAREN)) );
+		$block.addChild( BlockTool.buildLine(0, getTokenTextAndComment($LPAREN)) );
 		
 		$stat.block.setSpaceCount(Indent_Space_Count);
 		$block.addChild( $stat.block );
@@ -941,10 +941,10 @@ function_over_clause returns [NonLeafBlock block]
 	OVER LPAREN PARTITION BY column_name_list
 		{
 			$block.addChild( LeafBlockWithoutLine.build(0, getTokenTextAndComment($OVER)) );
-			$block.addChild( LeafBlockWithLine.build(1, getTokenTextAndComment($LPAREN)) );
+			$block.addChild( BlockTool.buildLine(1, getTokenTextAndComment($LPAREN)) );
 			
 			$block.addChild( LeafBlockWithoutLine.build(Indent_Space_Count, getTokenTextAndComment($PARTITION)) );
-			$block.addChild( LeafBlockWithLine.build(1, getTokenTextAndComment($BY)) );
+			$block.addChild( BlockTool.buildLine(1, getTokenTextAndComment($BY)) );
 			
 			$column_name_list.block.setSpaceCount(Indent_Space_Count*2);
 			$block.addChild( $column_name_list.block );
@@ -971,11 +971,11 @@ case_clause returns [NonLeafBlock block]
 :
 	CASE
 		{ 
-			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($CASE)) );
+			$block.addChild( BlockTool.buildLine(0, getTokenTextAndComment($CASE)) );
 		}
 	(
 		WHEN
-			{ $block.addChild( LeafBlockWithLine.build(Indent_Space_Count, getTokenTextAndComment($WHEN)) ); } 
+			{ $block.addChild( BlockTool.buildLine(Indent_Space_Count, getTokenTextAndComment($WHEN)) ); } 
 		(
 		logic_expr
 			{ 
@@ -993,7 +993,7 @@ case_clause returns [NonLeafBlock block]
 				$block.addChild( LineOnlyBlock.build() );
 				
 				
-				$block.addChild( LeafBlockWithLine.build(Indent_Space_Count*2, getTokenTextAndComment($THEN)) );
+				$block.addChild( BlockTool.buildLine(Indent_Space_Count*2, getTokenTextAndComment($THEN)) );
 				
 				$top_expr.block.setSpaceCount(Indent_Space_Count*3);
 				$block.addChild($top_expr.block);
@@ -1009,7 +1009,7 @@ case_clause returns [NonLeafBlock block]
 	END
 		{
 			$block.addChild( LineOnlyBlock.build() );
-			$block.addChild( LeafBlockWithLine.build(0, getTokenTextAndComment($END)) );
+			$block.addChild( BlockTool.buildLine(0, getTokenTextAndComment($END)) );
 		}
 ;
 
@@ -1067,7 +1067,7 @@ ordered_column_name_list returns [NonLeafBlock block]
 			COMMA full_column_name
 				{
 					$block.addChild(
-						LeafBlockWithLine.build(0, getTokenTextAndComment($COMMA))
+						BlockTool.buildLine(0, getTokenTextAndComment($COMMA))
 					); 
 					$block.addChild($full_column_name.block);
 				}

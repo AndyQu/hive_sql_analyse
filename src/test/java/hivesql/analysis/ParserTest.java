@@ -107,6 +107,7 @@ public class ParserTest {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void showCompressedNodes(MultiKeyMap<Integer, MyAstNode> compressedAstM){
 		compressedAstM.entrySet().stream().forEach(entry->{
 			MultiKey<? extends Integer> key = entry.getKey();
@@ -118,6 +119,7 @@ public class ParserTest {
 		});
 	}
 	
+	@SuppressWarnings("unused")
 	private void showSegregatedClauses(MultiKeyMap<Integer, RuleContext> mm) {
 		mm.entrySet().stream().forEach(entry -> {
 			MultiKey<? extends Integer> key = entry.getKey();
