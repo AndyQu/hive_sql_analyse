@@ -41,7 +41,7 @@ dependencies {
 
     testCompile group: 'org.testng', name: 'testng', version: '6.9.10'
     
-    compile project(':common-ast')
+    compile project('common-ast')
 
 }
 configurations {
