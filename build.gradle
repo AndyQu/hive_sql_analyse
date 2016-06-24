@@ -50,7 +50,7 @@ configurations {
     compile.exclude module: 'slf4j-log4j12'
 }
 
-compileJava.dependsOn antlr4
+//compileJava.dependsOn antlr4
 
 
 /**
