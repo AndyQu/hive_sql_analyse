@@ -1007,6 +1007,7 @@ case_clause returns [NonLeafBlock block]
 	CASE
 		{ 
 			$block.addChild( buildFromToken(0, ($CASE)) );
+			$block.addChild( LineOnlyBlock.build() );
 		}
 	(
 		WHEN
