@@ -1,27 +1,18 @@
 package hivesql.analysis;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
-import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.atn.ATNState;
-import org.antlr.v4.runtime.atn.Transition;
+import org.antlr.v4.runtime.misc.IntervalSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import antlr4.extension.ATNStateExt;
 import antlr4.extension.IntervalExt;
 
-import org.apache.commons.lang3.tuple.Pair;
 
 public class SyntaxError {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SyntaxError.class);
@@ -31,9 +22,12 @@ public class SyntaxError {
 	private int charPositionInLine;
 	private String msg;
 	private RecognitionException e;
+
+	private IntervalSet expectedTokens;
+	private List<String> expectedTokenStrings;
+	private String ruleName;
 	
-	private Set<Transition> nonEpsilonTransitions;
-	private List<Pair<Token, String>> errorList = new ArrayList<Pair<Token, String>>();
+//	private Set<Transition> nonEpsilonTransitions;
 
 	public SyntaxError(Parser parser, Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
 			String msg, RecognitionException e) {
@@ -43,8 +37,8 @@ public class SyntaxError {
 		this.msg = msg;
 		this.e = e;
 		
-		List<String> stack = ((Parser)recognizer).getRuleInvocationStack(); 
-		Collections.reverse(stack);
+		List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
+		//stack is like: [stat, select_clause, selected_column_list, selected_column, function_over_clause, order_clause, ordered_column_name_list]
 		LOGGER.error("\nevent_name=syntax_error line={} char_position={} msg={} token={} rule_stack={}",
 				line, 
 				charPositionInLine, 
@@ -53,24 +47,35 @@ public class SyntaxError {
 				stack
 		);
 		
-		if(e==null || !(e instanceof InputMismatchException)){
+		if(e==null 
+				//|| !(e instanceof InputMismatchException)
+				){
 			LOGGER.error("event_name=RecognitionException_is_null");
 			return;
 		}
 		
 		this.ruleCtx = (ParserRuleContext)e.getCtx();
+
 		
-		ATN atn = parser.getATN();
-		this.curState = atn.states.get(e.getOffendingState());
-		LOGGER.info("atn_state={} offending_state={}",curState.stateNumber, e.getOffendingState());
+		this.offendingState = parser.getATN().states.get(e.getOffendingState());
+		LOGGER.info("atn_state={} offending_state={}", offendingState.stateNumber, e.getOffendingState());
+
+		this.expectedTokens=recognizer.getATN().getExpectedTokens(this.offendingState.stateNumber, e.getCtx());
+		this.expectedTokenStrings = IntervalExt.toTokens(this.expectedTokens, recognizer.getVocabulary());
+		this.ruleName=parser.getRuleNames()[e.getCtx().getRuleIndex()];
+		LOGGER.error("event_name=syntax_error expectedTokens={} rule_name={}",
+				expectedTokens.toString(recognizer.getVocabulary()),
+				this.ruleName
+		);
+
 		
-		
+		/*
 		List<String> expectedTokens = IntervalExt.toTokens(e.getExpectedTokens(), recognizer.getVocabulary());
 		LOGGER.error("event_name=syntax_error expectedTokens={}",
 				expectedTokens.stream().reduce((String a, String b) -> a + " , " + b)
 		);
 		
-		this.nonEpsilonTransitions = ATNStateExt.getNonEpsilonTransitions(curState, recognizer, LOGGER);
+		this.nonEpsilonTransitions = ATNStateExt.getNonEpsilonTransitions(offendingState, recognizer, LOGGER);
 		nonEpsilonTransitions.stream().forEach(
 				transition->{
 					Optional<String> text = IntervalExt.toTokens(transition.label(), recognizer.getVocabulary()).stream().reduce((String a, String b) -> a + " , " + b);
@@ -80,10 +85,11 @@ public class SyntaxError {
 					);
 				}
 		);
+		*/
 	}
 
 	private ParserRuleContext ruleCtx;
-	private ATNState curState;
+	private ATNState offendingState;
 
 	public Object getOffendingSymbol() {
 		return offendingSymbol;
@@ -121,13 +127,16 @@ public class SyntaxError {
 	public void setRuleCtx(ParserRuleContext ruleCtx) {
 		this.ruleCtx = ruleCtx;
 	}
-	public ATNState getCurState() {
-		return curState;
+	public ATNState getOffendingState() {
+		return offendingState;
 	}
-	public void setCurState(ATNState curState) {
-		this.curState = curState;
+	public void setOffendingState(ATNState offendingState) {
+		this.offendingState = offendingState;
 	}
-	public List<Pair<Token, String>> getErrorList() {
-		return errorList;
+	public String getRuleName() {
+		return ruleName;
+	}
+	public List<String> getExpectedTokenStrings() {
+		return expectedTokenStrings;
 	}
 }
