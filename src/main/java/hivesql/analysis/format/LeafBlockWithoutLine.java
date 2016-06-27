@@ -1,5 +1,7 @@
 package hivesql.analysis.format;
 
+import antlr4.extension.StringExt;
+
 public class LeafBlockWithoutLine extends Block {
 	private String content;
 
@@ -31,7 +33,7 @@ public class LeafBlockWithoutLine extends Block {
 
 	@Override
 	public String show() {
-		return String.format("%s%s", buildSpaces(getSpaceCount()), content);
+		return String.format("%s%s", StringExt.buildSpaces(getSpaceCount()), content);
 	}
 	
 	@Override

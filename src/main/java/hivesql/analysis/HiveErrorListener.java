@@ -31,4 +31,8 @@ public class HiveErrorListener extends BaseErrorListener {
 
 		syntaxErrors.add(new SyntaxError(parser, recognizer, offendingSymbol, line, charPositionInLine, msg, e));
 	}
+
+	public List<SyntaxError> getSyntaxErrors() {
+		return syntaxErrors;
+	}
 }

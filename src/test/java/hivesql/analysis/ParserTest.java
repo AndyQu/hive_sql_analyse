@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DiagnosticErrorListener;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.apache.commons.collections4.keyvalue.MultiKey;
@@ -35,31 +36,33 @@ public class ParserTest {
 	@DataProvider(name = "basic_sqls")
 	   public static Object[][] primeNumbers() {
 	      return new Object[][] {
-	    	  {"/basic_sqls/logic_expr.sql"}
-	    	  , 
-	    	  {"/basic_sqls/simple_logic_expr.sql"}
-	    	  ,
-	    	  {"/basic_sqls/sub_query_join.sql"}
-	    	  ,
-	    	  {"/basic_sqls/function_over.sql"}
-	    	  ,
-	    	  {"/basic_sqls/sort_distribute.sql"}
-	    	  ,
-	    	  {"/basic_sqls/case.sql"}
-	    	  ,
-	    	  {"/basic_sqls/distinct.sql"}
-	    	  ,
-	    	  {"/basic_sqls/if_as_group_by.sql"}
-	    	  ,
-	    	  {"/basic_sqls/simple_arith_expr.sql"}
-	    	  ,
-	    	  {"/basic_sqls/function_in_case.sql"}
-	    	  ,
-	    	  {"/basic_sqls/union_all.sql"}
-	    	  ,
-	    	  {"/basic_sqls/left_outer_join.sql"}
-	    	  ,
-	    	  {"/basic_sqls/comment.sql"}
+//	    	  {"/basic_sqls/logic_expr.sql"}
+//	    	  , 
+//	    	  {"/basic_sqls/simple_logic_expr.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/sub_query_join.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/function_over.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/sort_distribute.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/case.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/distinct.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/if_as_group_by.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/simple_arith_expr.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/function_in_case.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/union_all.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/left_outer_join.sql"}
+//	    	  ,
+//	    	  {"/basic_sqls/comment.sql"}
+//	    	  ,
+	    	  {"/error.sql"}
 	      };
 	   }
 	
@@ -89,7 +92,10 @@ public class ParserTest {
 		try {
 			HiveSQLLexer lexer = new HiveSQLLexer(new ANTLRInputStream(getClass().getResourceAsStream(sqlFile)));
 			HiveSQLParser parser = new HiveSQLParser(new CommonTokenStream(lexer));
+			parser.removeErrorListeners();
+//			parser.addErrorListener(new DiagnosticErrorListener());
 			parser.addErrorListener(new HiveErrorListener(parser));
+//			parser.setErrorHandler(new BailErrorStrategy());
 			StatContext statCtx = (StatContext)parser.stat();
 			
 			BlockTool.cutOutRedundantLines(statCtx.block);

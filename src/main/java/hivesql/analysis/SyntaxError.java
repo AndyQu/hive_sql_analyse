@@ -1,12 +1,17 @@
 package hivesql.analysis;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
+import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.atn.ATNState;
 import org.antlr.v4.runtime.atn.Transition;
@@ -15,9 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import antlr4.extension.ATNStateExt;
 import antlr4.extension.IntervalExt;
-import antlr4.extension.RuleContextExt;
-import hivesql.analysis.parse.HiveSQLLexer;
-import hivesql.analysis.parse.HiveSQLParser;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class SyntaxError {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SyntaxError.class);
@@ -27,6 +31,9 @@ public class SyntaxError {
 	private int charPositionInLine;
 	private String msg;
 	private RecognitionException e;
+	
+	private Set<Transition> nonEpsilonTransitions;
+	private List<Pair<Token, String>> errorList = new ArrayList<Pair<Token, String>>();
 
 	public SyntaxError(Parser parser, Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
 			String msg, RecognitionException e) {
@@ -36,42 +43,47 @@ public class SyntaxError {
 		this.msg = msg;
 		this.e = e;
 		
+		List<String> stack = ((Parser)recognizer).getRuleInvocationStack(); 
+		Collections.reverse(stack);
+		LOGGER.error("\nevent_name=syntax_error line={} char_position={} msg={} token={} rule_stack={}",
+				line, 
+				charPositionInLine, 
+				msg, 
+				offendingSymbol,
+				stack
+		);
+		
+		if(e==null || !(e instanceof InputMismatchException)){
+			LOGGER.error("event_name=RecognitionException_is_null");
+			return;
+		}
+		
 		this.ruleCtx = (ParserRuleContext)e.getCtx();
-		Stream<String> ruleNameChain = RuleContextExt.getRuleContextChainBottomUp(ruleCtx).stream().map(
-				rctx->HiveSQLParser.ruleNames[rctx.getRuleIndex()]
-				);
-		LOGGER.info("rule_chain={}",
-				ruleNameChain.reduce((a,b)->a+" , "+b)
-				);
 		
 		ATN atn = parser.getATN();
 		this.curState = atn.states.get(e.getOffendingState());
 		LOGGER.info("atn_state={} offending_state={}",curState.stateNumber, e.getOffendingState());
 		
-		Stream<String> expectedTokens = IntervalExt.toTokens(e.getExpectedTokens(), HiveSQLLexer.tokenNames);
-		LOGGER.error("event_name=syntax_error line={} char_position={} msg={} token={} expectedTokens={}",
-				line, 
-				charPositionInLine, 
-				msg, 
-				e.getOffendingToken().getText(),
-				expectedTokens.reduce((String a, String b) -> a + " , " + b)
+		
+		List<String> expectedTokens = IntervalExt.toTokens(e.getExpectedTokens(), recognizer.getVocabulary());
+		LOGGER.error("event_name=syntax_error expectedTokens={}",
+				expectedTokens.stream().reduce((String a, String b) -> a + " , " + b)
 		);
 		
-		this.nonEpsilonTransitions = ATNStateExt.getNonEpsilonTransitions(curState, LOGGER);
+		this.nonEpsilonTransitions = ATNStateExt.getNonEpsilonTransitions(curState, recognizer, LOGGER);
 		nonEpsilonTransitions.stream().forEach(
-				t->IntervalExt.toTokens(t.label(), HiveSQLLexer.tokenNames).forEach(
-						token->
-							LOGGER.info("event_name=expected_token value={} target_rule={}",token, HiveSQLParser.ruleNames[t.target.ruleIndex])
-				)
+				transition->{
+					Optional<String> text = IntervalExt.toTokens(transition.label(), recognizer.getVocabulary()).stream().reduce((String a, String b) -> a + " , " + b);
+					LOGGER.warn("event_name=expected_token value={} target_rule={}",
+							text, 
+							parser.getRuleNames()[transition.target.ruleIndex]
+					);
+				}
 		);
 	}
 
 	private ParserRuleContext ruleCtx;
 	private ATNState curState;
-	/**
-	 * 
-	 */
-	private Set<Transition> nonEpsilonTransitions;
 
 	public Object getOffendingSymbol() {
 		return offendingSymbol;
@@ -115,10 +127,7 @@ public class SyntaxError {
 	public void setCurState(ATNState curState) {
 		this.curState = curState;
 	}
-	public Set<Transition> getNonEpsilonTransitions() {
-		return nonEpsilonTransitions;
-	}
-	public void setNonEpsilonTransitions(Set<Transition> nonEpsilonTransitions) {
-		this.nonEpsilonTransitions = nonEpsilonTransitions;
+	public List<Pair<Token, String>> getErrorList() {
+		return errorList;
 	}
 }

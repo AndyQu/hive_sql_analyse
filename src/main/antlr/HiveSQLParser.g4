@@ -42,6 +42,10 @@ options
 	
 	public String getComment(Token t){
 			BufferedTokenStream ts = (BufferedTokenStream)getTokenStream();
+			if(t.getTokenIndex()<0){
+				//当出现syntax error的时候，antlr4会自动作“修正”，产生expected token。这些expected token的index是-1.
+				return null;
+			}
 			List<Token> tl = ts.getHiddenTokensToRight(t.getTokenIndex(), HiveSQLLexer.Channel_Comment);
 			if(tl!=null && tl.size()>0){
 				return getTokenText(tl.get(0));

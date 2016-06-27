@@ -3,6 +3,8 @@ package hivesql.analysis.format;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import antlr4.extension.StringExt;
+
 public abstract class Block {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(Block.class);
 	private int spaceCount;
@@ -27,12 +29,6 @@ public abstract class Block {
 	
 	public abstract String show();
 
-	public static String buildSpaces(int count){
-		StringBuilder ret=new StringBuilder();
-		for(int i=0;i<count;i++){ret.append(" ");}
-		return ret.toString();
-	}
-
 	public static String addSpaces(int spaceCount, String orgin){
 		StringBuilder r = new StringBuilder();
 		String[] arr = orgin.toString().split("\n");
@@ -40,12 +36,12 @@ public abstract class Block {
 			String line=arr[i];
 			if(i==arr.length-1){
 				if(!orgin.endsWith("\n")){
-					r.append(String.format("%s%s",buildSpaces(spaceCount),line));
+					r.append(String.format("%s%s",StringExt.buildSpaces(spaceCount),line));
 				}else{
-					r.append(String.format("%s%s\n",buildSpaces(spaceCount),line));
+					r.append(String.format("%s%s\n",StringExt.buildSpaces(spaceCount),line));
 				}
 			}else{
-				r.append(String.format("%s%s\n",buildSpaces(spaceCount),line));
+				r.append(String.format("%s%s\n",StringExt.buildSpaces(spaceCount),line));
 			}
 		}
 		return r.toString();

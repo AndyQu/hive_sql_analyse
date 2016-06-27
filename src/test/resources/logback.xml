@@ -3,12 +3,13 @@
 	<appender name="infoAppender"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>INFO</level>
+			<level>debug</level>
 		</filter>
 		<File>/tmp/logs/hive-sql/test.log</File>
 		<Append>true</Append>
 		<encoder>
-			<pattern>[%d{HH:mm:ss.SSS}][%-5level][%logger{0}] - %msg%n</pattern>
+			<!-- <pattern>[%d{HH:mm:ss.SSS}][%-5level][%logger{0}] - %msg%n</pattern> -->
+			<pattern>%msg%n</pattern>
 		</encoder>
 
 		<triggeringPolicy

@@ -1,5 +1,7 @@
 package hivesql.analysis.format;
 
+import antlr4.extension.StringExt;
+
 public final class LineOnlyBlock extends Block {
 	
 	private static final LineOnlyBlock One_Line = build(0,1);
@@ -30,7 +32,7 @@ public final class LineOnlyBlock extends Block {
 	@Override
 	public String show() {
 		StringBuilder ret = new StringBuilder();
-		String spaces = buildSpaces(getSpaceCount());
+		String spaces = StringExt.buildSpaces(getSpaceCount());
 		for(int i=0;i<getLineCount();i++){
 			ret.append(spaces+"\n");
 		}
