@@ -7,7 +7,7 @@ Eclipse，需要的Eclipse插件：
 2. minimal gradle editor（编辑gradle文件）
 3. data tools platform (编辑sql)
 4. antlr4
-5. tmf-xtext（编辑antlr4 文件）。由于存在bug，tmf-xtext必须通过zip文件安装
+5. tmf-xtext（编辑antlr4 文件）。由于存在bug，tmf-xtext必须通过zip文件安装 http://www.eclipse.org/modeling/tmf/downloads/?
 
 ## 计划
 ### 精确地汇报语法错误
