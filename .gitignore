@@ -3,7 +3,7 @@
 /.project
 /target
 /.settings
-/gradle
+# /gradle
 /.gradle
 /src/main/java/*.java
 /src/main/java/*.tokens
