@@ -8,6 +8,7 @@ Eclipse，需要的Eclipse插件：
 3. data tools platform (编辑sql)
 4. antlr4
 5. tmf-xtext（编辑antlr4 文件）。由于存在bug，tmf-xtext必须通过[zip文件](http://www.eclipse.org/modeling/tmf/downloads/?)安装 
+6. gconsole
 
 ## 计划
 ### 精确地汇报语法错误
