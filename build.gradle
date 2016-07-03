@@ -3,6 +3,9 @@ apply plugin: 'java'
 apply plugin: 'me.champeau.gradle.antlr4'
 apply plugin: "eclipse"
 
+compileJava.options.encoding = 'UTF-8'
+sourceCompatibility = 1.8
+
 buildscript {
     repositories {
         maven {
