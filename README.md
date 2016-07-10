@@ -14,6 +14,7 @@ Eclipse，需要的Eclipse插件：
 在Windows上，需要的工具：
 
 1. [windows git](https://git-scm.com/download/win)
+2. [windows vim](http://www.vim.org/download.php)
 
 ## 计划
 ### 精确地汇报语法错误
