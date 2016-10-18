@@ -465,5 +465,5 @@ fragment USER_VAR_SUBFIX4
 should support all characters
 */
 STRING
-   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9' | ' ' | ':' | '-' | '.' | '$' | '(' | ')')* SINGLE_QUOTE
+   : SINGLE_QUOTE ('A' .. 'Z' | 'a' .. 'z' | '_' | '0' .. '9' | ' ' | ':' | '-' | '.' | '$' | '(' | ')'|COMMA)* SINGLE_QUOTE
    ;
